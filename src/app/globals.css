@@ -1,0 +1,144 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Vape Store - DARK THEME ONLY */
+    --background: 0 0% 7%;
+    --foreground: 0 0% 94%;
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 94%;
+    --popover: 0 0% 9%;
+    --popover-foreground: 0 0% 94%;
+    --primary: 265 84% 64%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 16%;
+    --secondary-foreground: 0 0% 92%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 62%;
+    --accent: 265 84% 64%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 62.8% 50.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 20%;
+    --input: 0 0% 22%;
+    --ring: 265 84% 64%;
+    --brand-soft: 0 0% 16%;
+    --brand-border: 0 0% 24%;
+    --ink-muted: 0 0% 62%;
+    --success: 142 69% 44%;
+    --warning: 38 92% 50%;
+    --radius: 1rem;
+  }
+
+  * { @apply border-border; }
+  body {
+    @apply bg-background text-foreground antialiased scroll-smooth;
+    font-size: 14px;
+    font-family: var(--font-inter), sans-serif;
+  }
+  h1, h2, h3, h4, h5, h6 { 
+    @apply tracking-tighter leading-[1.1] text-foreground;
+    font-family: var(--font-jakarta), sans-serif;
+    font-weight: 800;
+  }
+
+  /* Prevent iOS/Android auto-zoom on input focus — mobile browsers zoom when computed font-size < 16px */
+  @media (max-width: 767px) {
+    input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+    textarea,
+    select {
+      font-size: 16px !important;
+    }
+    /* Radix UI Select/Combobox should inherit, not force 16px */
+    [data-radix-select-content] [role="option"],
+    [data-radix-combobox-content] [role="option"] {
+      font-size: inherit !important;
+    }
+  }
+
+  /* Touch targets: only for large buttons and links, not icon buttons */
+  @media (pointer: coarse) {
+    a, button:not([class*="h-7"]):not([class*="h-8"]):not([class*="h-9"]):not([class*="w-7"]):not([class*="w-8"]) {
+      min-height: 44px;
+    }
+  }
+}
+
+@layer components {
+  .btn-primary { 
+    @apply bg-primary text-white hover:opacity-90 transition-all duration-300 rounded-full font-black uppercase tracking-widest text-[9px] px-8 h-10 shadow-lg active:scale-95; 
+  }
+}
+
+/* Compatibility aliases for the existing soft utility classes. */
+@layer utilities {
+  .text-primary\/20 { color: hsl(var(--primary) / 0.58) !important; }
+  .text-primary\/30 { color: hsl(var(--primary) / 0.70) !important; }
+  .text-primary\/40 { color: hsl(var(--primary) / 0.82) !important; }
+  .bg-primary\/5 { background-color: hsl(var(--brand-soft)) !important; }
+  .border-primary\/5 { border-color: hsl(var(--brand-border)) !important; }
+  .surface-tint { background-color: hsl(var(--brand-soft)); }
+  .surface-border { border-color: hsl(var(--brand-border)); }
+  .text-ink-muted { color: hsl(var(--ink-muted)); }
+  .text-success { color: hsl(var(--success)); }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ken-burns {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.06); }
+}
+
+.animate-ken-burns {
+  animation: ken-burns 25s ease infinite alternate;
+}
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+.shadow-5xl {
+  box-shadow: 0 16px 44px -18px hsl(var(--primary) / 0.28); 
+}
+
+.shadow-4xl {
+  box-shadow: 0 12px 36px -16px hsl(var(--primary) / 0.24);
+}
+
+/* Bottom-sheet shadow for mobile dialogs */
+@media (max-width: 767px) {
+  [data-state="open"].shadow-5xl,
+  [data-state="open"].shadow-4xl {
+    box-shadow: 0 -8px 32px -4px hsl(var(--primary) / 0.18);
+  }
+}
+
+/* Safe area padding for iOS devices */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+}
+
+.footer-link-dot {
+  @apply w-1 h-1 rounded-full bg-primary/10 group-hover:bg-primary transition-colors duration-500;
+}
+
+::selection { background-color: hsl(var(--primary) / 0.35); }
+
+/* Scrollbar gelap */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--border)) transparent;
+}
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 9999px; }
+*::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground)); }

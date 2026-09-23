@@ -1,0 +1,32 @@
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+
+# Next.js build output
+.next
+out
+dist
+build
+
+# Env & secrets (JANGAN pernah di-commit)
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Build ID hasil generate
+src/lib/build-id.generated.ts
+
+# Misc
+*.tsbuildinfo
+next-env.d.ts
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Vercel
+.vercel
