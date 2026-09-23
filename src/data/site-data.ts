@@ -5,8 +5,8 @@ import {
 export const siteConfig = {
   name: "Vape Store",
   tagline: "Katalog Vape & Liquid Terlengkap",
-  phone: "",
-  whatsapp: "",
+  phone: "081200000000",
+  whatsapp: "https://wa.me/6281200000000",
   address: "",
   instagram: "",
   tiktok: "",

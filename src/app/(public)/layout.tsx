@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { ToasterProvider } from "@/components/toaster-provider";
+import { AgeGate } from "@/components/AgeGate";
 
 export default function PublicLayout({
   children,
@@ -17,6 +18,7 @@ export default function PublicLayout({
         {children}
       </main>
       <Footer />
+      <AgeGate />
       <ToasterProvider />
     </>
   );
