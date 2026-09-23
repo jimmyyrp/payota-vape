@@ -99,7 +99,7 @@ const GUIDE_SECTIONS: { id: string; icon: React.ElementType; label: string; desc
         items: [
           'Tekan "TERBITKAN BARU" di halaman Manajemen Produk.',
           'Judul wajib diisi; harga harus angka (boleh 0).',
-          'Deskripsi opsional — maksimal 2000 karakter, gunakan untuk menjelaskan bunga, ukuran, dsb.',
+          'Deskripsi opsional — maksimal 2000 karakter, gunakan untuk menjelaskan varian rasa, ukuran/nicotine, kelengkapan, dsb.',
           'Unggah 1-5 foto. Foto pertama otomatis menjadi thumbnail produk.',
           'Gunakan alat bingkai (P/S/L) untuk memotong foto sebelum unggah.',
           'Geser (drag) foto untuk mengubah urutan tampil di galeri.',

@@ -1,23 +1,20 @@
-# Fee Rainbow Padang – Premium Florist & Gift Specialist (v1.0 Production)
+# Vape Store – Katalog Katalog & Layanan Vape (Dark Theme) (v1.0 Production)
 
-Platform digital profesional untuk layanan florist premium, buket bunga segar, papan bunga, dan hadiah spesial di Kota Padang, Sumatera Barat.
+Platform digital untuk toko vape: katalog visual produk liquid/mod/device, layanan, ulasan pelanggan, dan panel admin terenkripsi. Tema gelap penuh, tanpa fitur seasonal event.
 
-## 🚀 Fitur Utama (Production Ready)
+## Fitur Utama
 
-- **Compact Visual Catalog**: Sistem grid 6-kolom desktop yang arsitektural untuk minim scrolling.
-- **Dynamic Daily Hero**: Latar belakang beranda yang berganti otomatis setiap hari dari karya portofolio.
-- **Advanced Filtering**: Filter karya berdasarkan Kategori, Tags, dan Urutan (Terbaru/Populer).
-- **Client-Side Bookmarks**: Fitur simpan favorit lokal dengan sinkronisasi instan.
-- **Staff Portal**: Panel admin terenkripsi untuk manajemen konten dan ulasan klien.
-- **Modular Architecture**: Tipe, query, dan hook terpusat untuk kemudahan maintenance.
+- **Katalog Produk Compact**: Grid arsitektural dengan filter Kategori, Sub-kategori, dan urutan Terbaru/Populer.
+- **Dynamic Daily Hero**: Latar beranda berganti otomatis dari produk katalog sehari-hari.
+- **Bookmark Favorit**: Simpan produk favorit secara lokal dengan sinkronisasi instan.
+- **Panel Admin Terenkripsi**: Manajemen produk, layanan, ulasan, users, log aktivitas, dan pengaturan.
+- **Arsitektur Modular**: Tipe, query, dan hook terpusat untuk maintenance mudah.
 
-## 🛠️ Langkah Setup (Development)
+## Langkah Setup (Development)
 
-### 1. Clone & Install
+### 1. Install
 
 ```bash
-git clone <repo-url>
-cd fee-rainbow-pdg
 npm install
 ```
 
@@ -27,21 +24,19 @@ npm install
 cp .env.example .env.local
 ```
 
-Isi `NEXT_PUBLIC_SUPABASE_URL` dan `NEXT_PUBLIC_SUPABASE_ANON_KEY` dari dashboard Supabase Anda.
+Isi `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, dan `SUPABASE_SERVICE_ROLE_KEY` dari dashboard Supabase Anda.
 
 ### 3. Setup Database (Supabase)
 
-Isi `SUPABASE_DB_URL` di `.env` dari **Supabase Dashboard → Project Settings → Database → Connection string**. Jangan gunakan anon key atau service-role key sebagai password koneksi PostgreSQL.
+Isi `SUPABASE_DB_URL` dari **Supabase Dashboard → Project Settings → Database → Connection string**. Pastikan memakai koneksi pooler/session (`postgres.<ref>` user) bila host langsung tidak resolve.
 
-Jalankan migration dari folder project:
+Jalankan migration:
 
 ```bash
 npm run db:migrate
 ```
 
-Runner membuat `public.schema_migrations`, menerapkan file `NNN_*.sql` berurutan, aman dijalankan berulang kali, dan memakai advisory lock agar dua proses tidak berjalan bersamaan. Data yang sudah ada tidak di-reset.
-
-Lihat `migrations/README.md` untuk panduan lengkap.
+Runner membuat `public.schema_migrations`, menerapkan file `migrations/001_vape_store_schema.sql`, aman dijalankan berulang kali, dan memakai advisory lock agar dua proses tidak berjalan bersamaan. Data yang sudah ada tidak di-reset.
 
 ### 4. Jalankan Development Server
 
@@ -51,74 +46,32 @@ npm run dev
 
 Akses di `http://localhost:9002`
 
-## 🛠️ Langkah Deployment (GitHub & Vercel)
+## Deployment (Vercel)
 
-### 1. Persiapan Repository
-
-- Unggah seluruh kode ini ke repository **GitHub** Anda.
-
-### 2. Deploy ke Vercel
-
-- Hubungkan GitHub Anda di dashboard Vercel.
-- Tambahkan **Environment Variables**:
-  - `NEXT_PUBLIC_SUPABASE_URL`
-  - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- Jalankan `npm run db:migrate` menggunakan environment lokal atau environment deployment yang memiliki `SUPABASE_DB_URL`.
+- Hubungkan repository di dashboard Vercel.
+- Tambahkan **Environment Variables**: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`.
+- Jalankan `npm run db:migrate` di lingkungan yang memiliki `SUPABASE_DB_URL`.
 - Klik **Deploy**.
 
-## 💻 Perintah Pemeliharaan (CLI)
+## Perintah Pemeliharaan (CLI)
 
-### Pembersihan Data Server (Hard Delete)
+- Pembersihan data server: `curl -X POST https://<app>.vercel.app/api/maintenance`
+- Pembersihan cache global: `curl -X POST https://<app>.vercel.app/api/revalidate`
 
-```bash
-curl -X POST https://nama-aplikasi-anda.vercel.app/api/maintenance
-```
+## Update Website yang AMAN (Data & Login Tidak Hilang)
 
-### Pembersihan Cache Global
+1. **Jangan pernah** menjalankan migration secara manual di produksi — file tersebut `DROP SCHEMA public CASCADE` dan menghapus seluruh data. File sudah punya safety guard yang membatalkan eksekusi bila database sudah berisi data.
+2. Untuk update skema aman, jalankan `npm run db:migrate`; hanya file `NNN_*.sql` baru yang diterapkan (dicatat di `schema_migrations`).
+3. Setelah deploy, buka **Admin → Developer → Cache Control** lalu **PURGE ALL CACHE (AMAN)** untuk merevalidasi ISR/CDN dan membersihkan cache browser tanpa menghapus sesi login admin maupun bookmark favorit pengunjung (kunci `site_*` dipertahankan).
 
-```bash
-curl -X POST https://nama-aplikasi-anda.vercel.app/api/revalidate
-```
-
-## 🔄 Update Website yang AMAN (Data & Login Tidak Hilang)
-
-Saat ingin memperbarui website di database yang SUDAH terpakai:
-
-1. **Jangan pernah** menjalankan `setup.sql` (atau migration `001_initial_schema.sql`)
-   secara manual di database produksi — file itu `DROP TABLE ... CASCADE` dan
-   menghapus **seluruh data**: karya, akun staff, dan sesi login.
-   Sekarang kedua file itu **memiliki safety guard** yang membatalkan eksekusi
-   otomatis bila database sudah berisi data.
-2. Untuk update skema yang aman, jalankan saja migrasi inkremental:
-   ```bash
-   npm run db:migrate
-   ```
-   Runner hanya menerapkan file `migrations/NNN_*.sql` yang **belum pernah**
-   diterapkan (dicatat di tabel `schema_migrations`). Data lama tidak dihapus.
-
-### Membersihkan Cache Setelah Update (Termasuk di HP)
-
-Setelah deploy versi baru, buka panel **Admin → Developer → Cache Control** lalu
-klik **PURGE ALL CACHE (AMAN)**. Tombol ini:
-
-- Merevalidasi seluruh halaman di server (ISR/CDN Next.js).
-- Membersihkan cache browser saat ini juga (localStorage non-esensial,
-  sessionStorage, dan CacheStorage) sehingga HP pengunjung tidak lagi
-  menampilkan versi lama.
-- **Tidak menghapus** sesi login admin/staf dan bookmark favorit pengunjung
-  (kunci `fee_*` yang aman dipertahankan), lalu memuat ulang halaman otomatis.
-
-Bookmark favorit pengunjung tersimpan di `localStorage` per perangkat
-(kunci `fee_bookmarks`) — aman dari update kode maupun bersihkan cache di atas.
-
-## 📁 Struktur Project
+## Struktur Project
 
 ```
 src/
 ├── app/           # Halaman & route (Next.js App Router)
-│   ├── admin/     # Panel admin (portofolio, services, users, dll)
-│   ├── api/       # API routes (maintenance, revalidate)
-│   └── ...        # Halaman publik (layanan, portofolio, bantuan)
+│   ├── admin/     # Panel admin (karya, services, users, dll)
+│   ├── api/       # API routes (maintenance, revalidate, storage, logout)
+│   └── ...        # Halaman publik (karya, layanan, review, bantuan)
 ├── components/    # Komponen UI (Header, Footer, home sections)
 ├── data/          # Data statis (site-data.ts)
 ├── hooks/         # Custom hooks (use-bookmarks, use-toast, use-admin-data)
@@ -128,14 +81,12 @@ src/
     ├── supabase.ts     # Supabase client
     └── types.ts        # Type definitions
 
-  migrations/             # Database migration SQL files
-  ├── 001_initial_schema.sql
-  ├── 002_rpc_functions.sql
-  ├── 003_rls_policies.sql
-  └── README.md
+migrations/
+├── 001_vape_store_schema.sql   # Satu-satunya skema (tabel products, reviews, settings, dll)
+└── README.md
 ```
 
 ---
 
-_Merayakan Setiap Momen Berharga bersama Fee Rainbow Padang._
+_Vape Store — Dark Theme Katalog & Layanan._
 _Designed by Ran Dev - v1.0 Premium Release_

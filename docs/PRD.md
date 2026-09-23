@@ -1,17 +1,22 @@
-
-# Dokumentasi Produk (PRD) – Fee Rainbow Padang v1.0
+# Dokumentasi Produk (PRD) – Vape Store v1.0
 
 ## 1. Visi & Tujuan
-**Fee Rainbow** adalah platform digital untuk florist premium dan jasa pembuatan hadiah (buket bunga, papan bunga, snack bouquet) di Kota Padang. Berdiri sejak 2016, platform ini bertujuan memudahkan klien memesan bunga secara instan (Order Dadakan) dengan kualitas estetika modern dan sistem navigasi yang padat namun elegan.
+**Vape Store** adalah platform digital untuk toko vape: katalog visual liquid/mod/device/pod/disposable, informasi layanan, ulasan pelanggan, dan pemesanan instan via WhatsApp. Desain memakai tema gelap penuh, tidak ada mode terang, dan tidak mengandung fitur musiman.
 
 ## 2. Fitur Utama
-- **Instant Order System**: Integrasi WhatsApp yang efisien untuk pesanan mendesak.
-- **Compact Visual Catalog**: Menampilkan ribuan karya dalam sistem grid 6-kolom yang efisien untuk meminimalkan scrolling berlebih di desktop.
-- **Dynamic Inventory**: Kategori bunga hanya ditampilkan jika memiliki minimal satu karya aktif.
-- **Customer Favorites**: Fitur penyimpanan karya favorit secara lokal.
+- **Instant Order System**: Integrasi WhatsApp untuk pemesanan cepat (link dari setiap produk/layanan).
+- **Compact Visual Catalog**: Grid 6-kolom desktop untuk minim scrolling.
+- **Dynamic Inventory**: Kategori hanya tampil jika memiliki minimal satu produk aktif.
+- **Customer Favorites**: Simpan produk favorit secara lokal per perangkat.
+- **Staff Portal**: Panel admin terenkripsi untuk produk, layanan, ulasan, log aktivitas, users, dan pengaturan.
+- **SEO**: JSON-LD `Store` (bukan Florist) + sitemap/robots dengan ISR.
 
 ## 3. Identitas Visual
-- **Nama**: Fee Rainbow Padang.
-- **Warna Utama**: Magenta (#E91E63) - Mewakili keceriaan dan gairah florist.
-- **Warna Pendukung**: Cream (#FFFDF9) - Memberikan kesan bersih, premium, dan arsitektural.
-- **Tipografi**: Plus Jakarta Sans (Modern & Terstruktur).
+- **Nama**: Vape Store.
+- **Mode**: Dark-only (token `background`, `card`, `primary` ungu 265 84% 64%).
+- **Aksen**: Palet ungu/violet (#8B5CF6, #A78BFA, #C4B5FD).
+- **Tipografi**: Plus Jakarta Sans + Inter.
+
+## 4. Non-Goals
+- Tidak ada basis data florist (`posts`, `post_*`, `testimonials`, `site_settings`) — semua memakai skema umum (`products`, `reviews`, `settings`, `activity_logs`).
+- Tidak ada RPC/event/RSP musiman.

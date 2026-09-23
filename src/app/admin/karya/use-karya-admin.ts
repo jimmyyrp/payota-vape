@@ -9,7 +9,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
 import { friendlyDbError } from '@/lib/db-errors';
-import { compressAndUpload, destroyCloudinaryAsset, getPublicIdFromUrl } from '@/lib/image-upload';
+import { compressAndUpload, destroyStorageAsset, getStoragePathFromUrl } from '@/lib/image-upload';
 import { duplicatePostById } from '@/lib/post-actions';
 import { logActivity } from '@/lib/activity-log';
 import type { ActivitySnapshot } from '@/lib/activity-log';
@@ -545,7 +545,7 @@ export function useKaryaAdmin(initial: KaryaAdminInitialState = {}) {
         postId = data.id;
       }
 
-      // Upload sudah dilakukan langsung ke Cloudinary saat applyCrop.
+      // Upload sudah dilakukan langsung ke Supabase Storage saat applyCrop.
       // Di sini tinggal merapikan: asset lama yang dibuang dari galeri ikut dihapus.
 
       if (editingItem) {
@@ -553,10 +553,10 @@ export function useKaryaAdmin(initial: KaryaAdminInitialState = {}) {
         const removedPublicIds = (editingItem.images || [])
           .map((img) => img.url_images)
           .filter((url) => url && !keepUrls.has(url))
-          .map((url) => getPublicIdFromUrl(url))
+          .map((url) => getStoragePathFromUrl(url))
           .filter((pid): pid is string => !!pid);
 
-        await Promise.all(removedPublicIds.map((pid) => destroyCloudinaryAsset(pid)));
+        await Promise.all(removedPublicIds.map((pid) => destroyStorageAsset(pid)));
       }
 
       // Kategori dapat disusun ulang setiap kali; gambar hanya disentuh jika berubah.
@@ -806,7 +806,7 @@ export function useKaryaAdmin(initial: KaryaAdminInitialState = {}) {
     [fetchData, toast]
   );
 
-  /** Hapus permanen: bersihkan aset Cloudinary lalu baris relasi + induk. */
+  /** Hapus permanen: bersihkan aset Supabase Storage lalu baris relasi + induk. */
   const handlePermanentDelete = useCallback(async () => {
     if (!permanentDeleteId || isProcessingRef.current) return;
     const idToDelete = permanentDeleteId;
@@ -820,9 +820,9 @@ export function useKaryaAdmin(initial: KaryaAdminInitialState = {}) {
         ...(target?.gambar_thumbnail ? [target.gambar_thumbnail] : []),
       ];
       const publicIds = Array.from(
-        new Set(urls.map((u) => getPublicIdFromUrl(u)).filter((pid): pid is string => !!pid))
+        new Set(urls.map((u) => getStoragePathFromUrl(u)).filter((pid): pid is string => !!pid))
       );
-      await Promise.allSettled(publicIds.map((pid) => destroyCloudinaryAsset(pid)));
+      await Promise.allSettled(publicIds.map((pid) => destroyStorageAsset(pid)));
 
       const [catDel, subDel, imgDel] = await Promise.all([
         supabase.from('product_categories').delete().eq('product_id', idToDelete),
@@ -873,9 +873,9 @@ export function useKaryaAdmin(initial: KaryaAdminInitialState = {}) {
             ...(target.gambar_thumbnail ? [target.gambar_thumbnail] : []),
           ];
           const publicIds = Array.from(
-            new Set(urls.map((url) => getPublicIdFromUrl(url)).filter((pid): pid is string => !!pid))
+            new Set(urls.map((url) => getStoragePathFromUrl(url)).filter((pid): pid is string => !!pid))
           );
-          await Promise.allSettled(publicIds.map((pid) => destroyCloudinaryAsset(pid)));
+          await Promise.allSettled(publicIds.map((pid) => destroyStorageAsset(pid)));
 
           const [catDel, subDel, imgDel] = await Promise.all([
             supabase.from('product_categories').delete().eq('product_id', target.id),
@@ -966,14 +966,14 @@ export function useKaryaAdmin(initial: KaryaAdminInitialState = {}) {
         toast({
           variant: 'destructive',
           title: 'Gagal Mengunggah',
-          description: 'Gambar tidak dapat diunggah ke Cloudinary. Coba lagi.',
+          description: 'Gambar tidak dapat diunggah ke penyimpanan. Coba lagi.',
         });
       }
     } catch {
       toast({
         variant: 'destructive',
         title: 'Gagal Mengunggah',
-        description: 'Gambar tidak dapat diunggah ke Cloudinary. Coba lagi.',
+        description: 'Gambar tidak dapat diunggah ke penyimpanan. Coba lagi.',
       });
     } finally {
       setIsUploadingImage(false);

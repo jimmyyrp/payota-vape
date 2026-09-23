@@ -466,7 +466,7 @@ export default function AdminDashboard() {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={popularWorks} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#fff1f5" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 9, fontWeight: 'bold', fill: '#f472b6' }} />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 9, fontWeight: 'bold', fill: '#a78bfa' }} />
                   <YAxis hide />
                   <Tooltip
                     cursor={{ fill: '#fff9fb' }}
@@ -560,7 +560,7 @@ export default function AdminDashboard() {
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={viewsTrend} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#fff1f5" />
-                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 9, fontWeight: 'bold', fill: '#f472b6' }} />
+                  <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 9, fontWeight: 'bold', fill: '#a78bfa' }} />
                   <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 8, fill: '#c4b5fd' }} />
                   <Tooltip
                     contentStyle={{ borderRadius: '1.2rem', border: 'none', fontSize: '10px', boxShadow: '0 10px 30px rgba(139,92,246,0.15)' }}
@@ -602,7 +602,7 @@ export default function AdminDashboard() {
                 <BarChart data={ratingDistribution} layout="vertical" margin={{ top: 5, right: 20, left: 5, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#fff1f5" />
                   <XAxis type="number" axisLine={false} tickLine={false} tick={{ fontSize: 8, fill: '#c4b5fd' }} />
-                  <YAxis type="category" dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 9, fontWeight: 'bold', fill: '#f472b6' }} width={30} />
+                  <YAxis type="category" dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 9, fontWeight: 'bold', fill: '#a78bfa' }} width={30} />
                   <Tooltip
                     contentStyle={{ borderRadius: '1.2rem', border: 'none', fontSize: '10px', boxShadow: '0 10px 30px rgba(139,92,246,0.15)' }}
                     formatter={(value: number) => [`${value} testimoni`]}
@@ -860,7 +860,7 @@ export default function AdminDashboard() {
           <div className="divide-y divide-primary/5">
             {role === 'developer' && (
               <Link href="/admin/developer" className="flex items-center gap-4 px-8 py-4 hover:bg-primary/[0.02] transition-colors group">
-                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-primary to-rose-600 text-white flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-primary to-fuchsia-600 text-white flex items-center justify-center shrink-0">
                   <Terminal size={18} />
                 </div>
                 <div className="flex-1 min-w-0">

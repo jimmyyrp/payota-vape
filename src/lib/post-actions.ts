@@ -26,7 +26,7 @@ interface RawSourceRow {
 /**
  * Duplikat karya menjadi DRAF baru:
  * - judul + " (Salinan)", harga/deskripsi/klasifikasi/galeri ikut
- * - URL Cloudinary reuse (tanpa upload ulang)
+ * - URL Supabase Storage reuse (tanpa upload ulang)
  * - views reset 0, is_active=false agar tak tayang tak sengaja.
  */
 export async function duplicatePostById(postId: number | string): Promise<DuplicateResult> {

@@ -67,7 +67,7 @@ interface ProductPostLike {
 }
 
 /** Produk + penawaran pada halaman detail karya. */
-export function productJsonLd(post: ProductPostLike, path: `/karya/${string}` | `/layanan/${string}` | `/portofolio/${string}`) {
+export function productJsonLd(post: ProductPostLike, path: `/karya/${string}` | `/layanan/${string}`) {
   const url = absoluteUrl(path);
   return {
     '@context': 'https://schema.org',

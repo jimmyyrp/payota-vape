@@ -14,7 +14,7 @@
 import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
-import { compressAndUpload, destroyCloudinaryAsset, getPublicIdFromUrl } from '@/lib/image-upload';
+import { compressAndUpload, destroyStorageAsset, getStoragePathFromUrl } from '@/lib/image-upload';
 import { KaryaFormDialog } from '@/components/karya-form-dialog';
 import { useImageCropper } from '@/hooks/use-image-cropper';
 import {
@@ -181,14 +181,14 @@ export const InlineKaryaEditDialog: React.FC<InlineKaryaEditDialogProps> = ({ po
         toast({
           variant: 'destructive',
           title: 'Gagal Mengunggah',
-          description: 'Gambar tidak dapat diunggah ke Cloudinary. Coba lagi.',
+          description: 'Gambar tidak dapat diunggah ke penyimpanan. Coba lagi.',
         });
       }
     } catch {
       toast({
         variant: 'destructive',
         title: 'Gagal Mengunggah',
-        description: 'Gambar tidak dapat diunggah ke Cloudinary. Coba lagi.',
+        description: 'Gambar tidak dapat diunggah ke penyimpanan. Coba lagi.',
       });
     } finally {
       setIsUploading(false);
@@ -273,11 +273,11 @@ export const InlineKaryaEditDialog: React.FC<InlineKaryaEditDialogProps> = ({ po
         if (error) throw error;
       }
 
-      // Galeri: hapus aset Cloudinary yang dibuang, lalu tulis ulang product_images.
+      // Galeri: hapus aset Supabase Storage yang dibuang, lalu tulis ulang product_images.
       if (galleryChanged) {
         const removedUrls = originalGallery.filter((url) => !finalUrls.includes(url));
-        const publicIds = removedUrls.map((url) => getPublicIdFromUrl(url)).filter((pid): pid is string => !!pid);
-        await Promise.allSettled(publicIds.map((pid) => destroyCloudinaryAsset(pid)));
+        const publicIds = removedUrls.map((url) => getStoragePathFromUrl(url)).filter((pid): pid is string => !!pid);
+        await Promise.allSettled(publicIds.map((pid) => destroyStorageAsset(pid)));
 
         await supabase.from('product_images').delete().eq('product_id', post.id);
 

@@ -34,7 +34,7 @@ const pool = new Pool({
 const client = await pool.connect();
 
 try {
-  await client.query('SELECT pg_advisory_lock(hashtext($1))', ['fee-rainbow-pdg:migrations']);
+  await client.query('SELECT pg_advisory_lock(hashtext($1))', ['vapestore:migrations']);
   await client.query(`
     CREATE TABLE IF NOT EXISTS public.schema_migrations (
       version TEXT PRIMARY KEY,
@@ -84,7 +84,7 @@ try {
 
   console.log('✅ Database sudah sinkron.');
 } finally {
-  await client.query('SELECT pg_advisory_unlock(hashtext($1))', ['fee-rainbow-pdg:migrations']).catch(() => {});
+  await client.query('SELECT pg_advisory_unlock(hashtext($1))', ['vapestore:migrations']).catch(() => {});
   client.release();
   await pool.end();
 }

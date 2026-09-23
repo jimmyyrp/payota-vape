@@ -1,8 +1,7 @@
-
 {
-    "name": "Fee Rainbow Padang",
-    "short_name": "Fee Rainbow",
-    "description": "Premium Florist & Gift Specialist Padang. Melayani Buket Bunga, Papan Bunga, dan Hadiah Spesial.",
+    "name": "Vape Store",
+    "short_name": "Vape Store",
+    "description": "Katalog & Layanan Vape. Liquid, Mod, Device, Pod, Disposable.",
     "icons": [
         {
             "src": "/favicon_io/android-chrome-192x192.png",
@@ -15,8 +14,8 @@
             "type": "image/png"
         }
     ],
-    "theme_color": "#E91E63",
-    "background_color": "#FFFDF9",
+    "theme_color": "#0B0B0F",
+    "background_color": "#0B0B0F",
     "display": "standalone",
     "start_url": "/"
 }

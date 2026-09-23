@@ -6,17 +6,8 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ['lucide-react', 'recharts'],
   },
-  // Redirect permanen rute lama -> baru (SEO & bookmark tetap hidup).
-  // Query string (mis. ?category=1&id=2) otomatis dipertahankan Next.js.
-  async redirects() {
-    return [
-      { source: '/portofolio', destination: '/karya', permanent: true },
-      { source: '/portofolio/:id', destination: '/karya/:id', permanent: true },
-      { source: '/admin/portofolio', destination: '/admin/karya', permanent: true },
-    ];
-  },
   images: {
-    // Sumber gambar (Supabase/Cloudinary) sudah berformat WebP hasil kompresi
+    // Sumber gambar (Supabase Storage) sudah berformat WebP hasil kompresi
     // saat upload. Membatasi ke WebP saja mencegah Vercel membuat varian AVIF
     // tambahan (1 gambar = 1 transformation, bukan 2).
     formats: ['image/webp'],

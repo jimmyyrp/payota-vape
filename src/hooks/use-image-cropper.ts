@@ -4,7 +4,7 @@
  * useImageCropper - Satu-satunya sumber logika CROP & POTONG gambar yang
  * reusable (dipakai modal Karya & form Banner Event, dst).
  *
- * Memisahkan "mempotong gambar jadi File webp" dari "upload ke Cloudinary":
+ * Memisahkan "mempotong gambar jadi File webp" dari "upload ke Supabase Storage":
  * hook ini hanya bertanggung jawab memotong. Caller yang memutuskan mau
  * diapakan hasilnya (mis. tambah ke galeri karya / jadi banner event).
  *

@@ -61,8 +61,3 @@ export async function destroyStorageAsset(path: string): Promise<boolean> {
     return false;
   }
 }
-
-// Re-export alias agar kode lama yang memakai istilah Cloudinary tetap berfungsi
-// (logika kini sepenuhnya memakai Supabase Storage).
-export { destroyStorageAsset as destroyCloudinaryAsset };
-export { getStoragePathFromUrl as getPublicIdFromUrl };

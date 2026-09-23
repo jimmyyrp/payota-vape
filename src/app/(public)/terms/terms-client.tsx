@@ -60,7 +60,7 @@ export default function TermsPage() {
               <h2 className="text-[11px] font-black uppercase tracking-[0.2em]">4. Hak Kekayaan Intelektual</h2>
             </div>
             <div className="space-y-4 text-muted-foreground font-medium leading-relaxed text-[12px] italic">
-              <p>Seluruh dokumentasi produk Vape Store adalah hak milik intelektual manajemen. Kami berhak menggunakan dokumentasi tersebut untuk portofolio resmi.</p>
+              <p>Seluruh dokumentasi produk Vape Store adalah hak milik intelektual manajemen. Kami berhak menggunakan dokumentasi tersebut untuk dokumentasi resmi.</p>
               <p>Klien dilarang mereproduksi atau menggunakan foto produk kami untuk kepentingan komersial pihak lain tanpa izin tertulis.</p>
             </div>
           </section>
