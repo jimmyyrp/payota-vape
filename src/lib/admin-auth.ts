@@ -5,7 +5,8 @@ import { NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/supabase";
 
 export const ADMIN_COOKIE = "payota_admin";
-export const ADMIN_COOKIE_MAX_AGE = 12 * 60 * 60;
+// Masa aktif sesi admin: 30 hari, agar login tetap tersimpan walau sistem di-update/deploy ulang.
+export const ADMIN_COOKIE_MAX_AGE = 30 * 24 * 60 * 60;
 
 export interface AdminSession {
   userId: number;

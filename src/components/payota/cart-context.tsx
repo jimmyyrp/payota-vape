@@ -26,16 +26,44 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [open, setOpen] = useState(false);
 
+  const sanitize = useCallback((value: unknown): CartItem[] => {
+    if (!Array.isArray(value)) return [];
+    return value.filter(
+      (item): item is CartItem =>
+        !!item &&
+        typeof item === "object" &&
+        typeof (item as CartItem).id === "string" &&
+        typeof (item as CartItem).name === "string" &&
+        typeof (item as CartItem).priceNumber === "number",
+    );
+  }, []);
+
   useEffect(() => {
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
       if (!raw) return;
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) setItems(parsed);
+      setItems(sanitize(JSON.parse(raw)));
     } catch {
       /* abaikan penyimpanan rusak */
     }
-  }, []);
+  }, [sanitize]);
+
+  useEffect(() => {
+    const onStorage = (event: StorageEvent) => {
+      if (event.key !== STORAGE_KEY) return;
+      if (event.newValue === null) {
+        setItems([]);
+        return;
+      }
+      try {
+        setItems(sanitize(JSON.parse(event.newValue)));
+      } catch {
+        /* abaikan nilai rusak dari tab lain */
+      }
+    };
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+  }, [sanitize]);
 
   useEffect(() => {
     try {
