@@ -10,24 +10,11 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["var(--font-jakarta)", "sans-serif"],
+        sans: ["var(--font-inter)", "ui-sans-serif", "system-ui", "sans-serif"],
         inter: ["var(--font-inter)", "sans-serif"],
-        playfair: ["var(--font-playfair)", "serif"],
-        body: ["var(--font-inter)", "sans-serif"],
-        headline: ["var(--font-jakarta)", "sans-serif"],
+        headline: ["var(--font-jakarta)", "ui-sans-serif", "system-ui", "sans-serif"],
       },
       colors: {
-        brand: {
-          DEFAULT: "hsl(var(--primary))",
-          soft: "hsl(var(--brand-soft))",
-          border: "hsl(var(--brand-border))",
-        },
-        ink: {
-          DEFAULT: "hsl(var(--foreground))",
-          muted: "hsl(var(--ink-muted))",
-        },
-        success: "hsl(var(--success))",
-        warning: "hsl(var(--warning))",
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -53,6 +40,8 @@ const config: Config = {
           DEFAULT: "hsl(var(--accent))",
           foreground: "hsl(var(--accent-foreground))",
         },
+        accent2: "hsl(var(--accent2))",
+        panel: "hsl(var(--popover))",
         popover: {
           DEFAULT: "hsl(var(--popover))",
           foreground: "hsl(var(--popover-foreground))",
@@ -61,6 +50,8 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        success: "hsl(var(--success))",
+        warning: "hsl(var(--warning))",
       },
       borderRadius: {
         lg: "var(--radius)",

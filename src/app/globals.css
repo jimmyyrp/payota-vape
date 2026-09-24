@@ -4,141 +4,186 @@
 
 @layer base {
   :root {
-    /* Vape Store - DARK THEME ONLY */
-    --background: 0 0% 7%;
-    --foreground: 0 0% 94%;
-    --card: 0 0% 10%;
-    --card-foreground: 0 0% 94%;
-    --popover: 0 0% 9%;
-    --popover-foreground: 0 0% 94%;
-    --primary: 265 84% 64%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 16%;
-    --secondary-foreground: 0 0% 92%;
-    --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 62%;
-    --accent: 265 84% 64%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 62.8% 50.6%;
+    /* PAYOTA — Premium Lifestyle (Dark Only) */
+    --background: 0 0% 3.1%;
+    --foreground: 0 0% 100%;
+
+    --card: 0 0% 5.1%;
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 7.1%;
+    --popover-foreground: 0 0% 100%;
+
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 4%;
+    --secondary: 0 0% 9%;
+    --secondary-foreground: 0 0% 96%;
+    --muted: 0 0% 11.4%;
+    --muted-foreground: 0 0% 65%;
+    --accent: 0 0% 100%;
+    --accent-foreground: 0 0% 4%;
+    --accent2: 0 0% 85%;
+
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 20%;
-    --input: 0 0% 22%;
-    --ring: 265 84% 64%;
-    --brand-soft: 0 0% 16%;
-    --brand-border: 0 0% 24%;
-    --ink-muted: 0 0% 62%;
+    --border: 0 0% 100% / 0.08;
+    --input: 0 0% 100% / 0.12;
+    --ring: 0 0% 100%;
+
     --success: 142 69% 44%;
     --warning: 38 92% 50%;
-    --radius: 1rem;
+
+    --radius: 1.25rem;
   }
 
   * { @apply border-border; }
+  html { scroll-behavior: smooth; }
+
   body {
-    @apply bg-background text-foreground antialiased scroll-smooth;
-    font-size: 14px;
-    font-family: var(--font-inter), sans-serif;
+    @apply bg-background text-foreground antialiased overflow-x-hidden;
+    font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
   }
-  h1, h2, h3, h4, h5, h6 { 
-    @apply tracking-tighter leading-[1.1] text-foreground;
-    font-family: var(--font-jakarta), sans-serif;
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply tracking-tighter leading-[1.08] text-foreground;
+    font-family: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
     font-weight: 800;
   }
 
-  /* Prevent iOS/Android auto-zoom on input focus — mobile browsers zoom when computed font-size < 16px */
+  ::selection { background: hsl(var(--primary) / 0.3); }
+
+  /* Focus ring yang terlihat untuk aksesibilitas keyboard */
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) transparent;
+  }
+  *::-webkit-scrollbar { width: 10px; height: 10px; }
+  *::-webkit-scrollbar-track { background: transparent; }
+  *::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 9999px; }
+  *::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground)); }
+
   @media (max-width: 767px) {
     input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]),
     textarea,
     select {
       font-size: 16px !important;
     }
-    /* Radix UI Select/Combobox should inherit, not force 16px */
-    [data-radix-select-content] [role="option"],
-    [data-radix-combobox-content] [role="option"] {
-      font-size: inherit !important;
-    }
-  }
-
-  /* Touch targets: only for large buttons and links, not icon buttons */
-  @media (pointer: coarse) {
-    a, button:not([class*="h-7"]):not([class*="h-8"]):not([class*="h-9"]):not([class*="w-7"]):not([class*="w-8"]) {
-      min-height: 44px;
-    }
   }
 }
 
 @layer components {
-  .btn-primary { 
-    @apply bg-primary text-white hover:opacity-90 transition-all duration-300 rounded-full font-black uppercase tracking-widest text-[9px] px-8 h-10 shadow-lg active:scale-95; 
+  /* Tombol utama (putih) */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full font-bold uppercase tracking-[0.18em] text-[11px] transition-all duration-300 select-none;
+  }
+  .btn-primary {
+    @apply btn bg-primary text-primary-foreground px-7 h-11 hover:opacity-90 hover:shadow-[0_10px_40px_-8px_rgba(255,255,255,0.4)] active:scale-[0.98];
+  }
+  .btn-outline {
+    @apply btn border border-white/15 text-foreground px-7 h-11 hover:border-white/40 hover:bg-white/[0.03] active:scale-[0.98];
+  }
+  .btn-inactive {
+    @apply btn border border-white/10 text-muted-foreground px-5 h-9 text-[10px] hover:border-white/30 hover:text-foreground active:scale-[0.98];
+  }
+  .chip {
+    @apply inline-flex items-center rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.25em];
+  }
+  .card-surface {
+    @apply border border-border bg-[#0D0D0D] rounded-[1.25rem];
   }
 }
 
-/* Compatibility aliases for the existing soft utility classes. */
-@layer utilities {
-  .text-primary\/20 { color: hsl(var(--primary) / 0.58) !important; }
-  .text-primary\/30 { color: hsl(var(--primary) / 0.70) !important; }
-  .text-primary\/40 { color: hsl(var(--primary) / 0.82) !important; }
-  .bg-primary\/5 { background-color: hsl(var(--brand-soft)) !important; }
-  .border-primary\/5 { border-color: hsl(var(--brand-border)) !important; }
-  .surface-tint { background-color: hsl(var(--brand-soft)); }
-  .surface-border { border-color: hsl(var(--brand-border)); }
-  .text-ink-muted { color: hsl(var(--ink-muted)); }
-  .text-success { color: hsl(var(--success)); }
+/* ===== Efek dekoratif ringan ===== */
+
+/* Grid tipis latar (futuristic subtle) */
+.bg-grid {
+  background-image:
+    linear-gradient(hsl(var(--border)/0.55) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(var(--border)/0.55) 1px, transparent 1px);
+  background-size: 72px 72px;
 }
 
-.animate-fade-up {
-  animation: fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+/* Noise/grain sangat halus */
+.grain::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-@keyframes fade-up {
-  from { opacity: 0; transform: translateY(15px); }
+/* Teks gradien aksen */
+.text-gradient {
+  background: linear-gradient(120deg, #ffffff 20%, hsl(var(--accent2)) 60%, hsl(var(--accent)) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Container utama */
+.container-px { max-width: 1280px; margin-inline: auto; padding-inline: 24px; }
+@media (max-width: 768px) { .container-px { padding-inline: 16px; } }
+
+/* ===== Animasi ringan ===== */
+
+.animate-fade-in { animation: payota-fade-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-fade-up { animation: payota-fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-scale-in { animation: payota-scale-in 0.9s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-ken-burns { animation: payota-ken-burns 30s ease infinite alternate; }
+
+@keyframes payota-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes payota-fade-up {
+  from { opacity: 0; transform: translateY(22px); }
   to { opacity: 1; transform: translateY(0); }
 }
-
-@keyframes ken-burns {
-  0% { transform: scale(1); }
-  100% { transform: scale(1.06); }
+@keyframes payota-scale-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes payota-ken-burns {
+  from { transform: scale(1); }
+  to { transform: scale(1.05); }
 }
 
-.animate-ken-burns {
-  animation: ken-burns 25s ease infinite alternate;
+/* Reveal on scroll (dihidupkan oleh komponen Reveal) */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Skeleton shimmer halus */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: hsl(var(--muted));
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, hsl(0 0% 100% / 0.05), transparent);
+  animation: payota-shimmer 1.6s infinite;
+}
+@keyframes payota-shimmer {
+  100% { transform: translateX(100%); }
 }
 
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-.shadow-5xl {
-  box-shadow: 0 16px 44px -18px hsl(var(--primary) / 0.28); 
-}
-
-.shadow-4xl {
-  box-shadow: 0 12px 36px -16px hsl(var(--primary) / 0.24);
-}
-
-/* Bottom-sheet shadow for mobile dialogs */
-@media (max-width: 767px) {
-  [data-state="open"].shadow-5xl,
-  [data-state="open"].shadow-4xl {
-    box-shadow: 0 -8px 32px -4px hsl(var(--primary) / 0.18);
-  }
-}
-
-/* Safe area padding for iOS devices */
-@supports (padding-bottom: env(safe-area-inset-bottom)) {
-  .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
-}
-
-.footer-link-dot {
-  @apply w-1 h-1 rounded-full bg-primary/10 group-hover:bg-primary transition-colors duration-500;
-}
-
-::selection { background-color: hsl(var(--primary) / 0.35); }
-
-/* Scrollbar gelap */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: hsl(var(--border)) transparent;
-}
-*::-webkit-scrollbar { width: 10px; height: 10px; }
-*::-webkit-scrollbar-track { background: transparent; }
-*::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 9999px; }
-*::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground)); }

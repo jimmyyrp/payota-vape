@@ -2,6 +2,12 @@
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
+  // Root proyek eksplisit — mencegah Next.js salah infer (ada lockfile lain
+  // di direktori induk) yang bisa bikin path build/cache melenceng.
+  outputFileTracingRoot: process.cwd(),
+  turbopack: {
+    root: process.cwd(),
+  },
   // Tree-shake agresif untuk library besar → bundle lebih kecil.
   experimental: {
     optimizePackageImports: ['lucide-react', 'recharts'],

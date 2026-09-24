@@ -1,92 +1,92 @@
-# Vape Store – Katalog Katalog & Layanan Vape (Dark Theme) (v1.0 Production)
+# PAYOTA — Gaya Hidup Premium
 
-Platform digital untuk toko vape: katalog visual produk liquid/mod/device, layanan, ulasan pelanggan, dan panel admin terenkripsi. Tema gelap penuh, tanpa fitur seasonal event.
+Website katalog produk lifestyle premium — dark, minimal, modern, futuristik. Katalog statis
+didukung database Supabase + CMS admin (login admin, kelola produk & kategori). Seluruh konten
+antarmuka dalam Bahasa Indonesia.
 
-## Fitur Utama
+## Teknologi
 
-- **Katalog Produk Compact**: Grid arsitektural dengan filter Kategori, Sub-kategori, dan urutan Terbaru/Populer.
-- **Dynamic Daily Hero**: Latar beranda berganti otomatis dari produk katalog sehari-hari.
-- **Bookmark Favorit**: Simpan produk favorit secara lokal dengan sinkronisasi instan.
-- **Panel Admin Terenkripsi**: Manajemen produk, layanan, ulasan, users, log aktivitas, dan pengaturan.
-- **Arsitektur Modular**: Tipe, query, dan hook terpusat untuk maintenance mudah.
+- Next.js 15 (App Router) + TypeScript, Tailwind CSS (dark only)
+- Supabase (PostgreSQL + RLS + RPC auth) untuk data & sesi admin
+- Lucide React (icon), Radix UI Dialog (modal produk)
+- Data dummy seed dari `src/data/products.ts` + seed script
+- Animasi ringan: CSS transition + IntersectionObserver (scroll reveal)
 
-## Langkah Setup (Development)
+## Struktur
 
-### 1. Install
+```text
+src/
+├── app/
+│   ├── layout.tsx            # Font, metadata, Navbar/Footer/Provider/AgeGate global
+│   ├── page.tsx              # Home (Hero, Koleksi, Featured, Tentang, Jurnal, Newsletter)
+│   ├── catalog/page.tsx      # Halaman katalog lengkap (dari DB)
+│   ├── product/[id]/page.tsx # Halaman detail produk (dari DB)
+│   ├── admin/                # CMS: login, dashboard produk & kategori
+│   ├── api/admin/            # REST API admin (produk & kategori)
+│   └── ...
+├── components/payota/        # Navbar, Hero, ProductCard/Grid, Modal, Footer, ...
+├── data/products.ts          # Data dummy: 10 produk, 4 kategori (Bahasa Indonesia)
+└── lib/                      # supabase clients, admin-auth, payota-db, payota-admin
+```
+
+## Menjalankan
 
 ```bash
 npm install
+npm run dev          # http://localhost:9002
+npm run build
+npm run typecheck
 ```
 
-### 2. Konfigurasi Environment
+## Database, Migrasi & Seed
+
+Konfigurasi di `.env` (copy dari `.env.example`):
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+SUPABASE_SERVICE_ROLE_KEY=...   # server-only
+SUPABASE_DB_URL=postgresql://... # untuk migrasi langsung
+```
+
+Jalankan migrasi (idempoten, mencatat versi di `schema_migrations`):
 
 ```bash
-cp .env.example .env.local
+node scripts/migrate.mjs
 ```
 
-Isi `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, dan `SUPABASE_SERVICE_ROLE_KEY` dari dashboard Supabase Anda.
-
-### 3. Setup Database (Supabase)
-
-Isi `SUPABASE_DB_URL` dari **Supabase Dashboard → Project Settings → Database → Connection string**. Pastikan memakai koneksi pooler/session (`postgres.<ref>` user) bila host langsung tidak resolve.
-
-Jalankan migration:
+Seed 4 kategori + 10 produk dummy ke database (upsert berdasarkan slug):
 
 ```bash
-npm run db:migrate
+node scripts/seed-payota.mjs
 ```
 
-Runner membuat `public.schema_migrations`, menerapkan file `migrations/001_vape_store_schema.sql`, aman dijalankan berulang kali, dan memakai advisory lock agar dua proses tidak berjalan bersamaan. Data yang sudah ada tidak di-reset.
+## Login Admin / CMS
 
-### 4. Jalankan Development Server
+- Halaman login: `/admin/login`
+- Login awal di-seed oleh migrasi:
 
-```bash
-npm run dev
-```
+| Username | Password  | Role      |
+|----------|-----------|-----------|
+| `admin`  | `admin123`| admin     |
+| `dev`    | `dev123`  | developer |
 
-Akses di `http://localhost:9002`
+Sesi bertahan 12 jam. Ganti password default segera setelah deploy — password di-hash
+otomatis oleh trigger database saat insert/update.
 
-## Deployment (Vercel)
+### Endpoint API admin (semua butuh cookie sesi)
 
-- Hubungkan repository di dashboard Vercel.
-- Tambahkan **Environment Variables**: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`.
-- Jalankan `npm run db:migrate` di lingkungan yang memiliki `SUPABASE_DB_URL`.
-- Klik **Deploy**.
+- `POST /api/admin/login` · `POST /api/admin/logout`
+- `GET|POST /api/admin/products` · `GET|PATCH|DELETE /api/admin/products/[id]`
+- `GET|POST /api/admin/categories` · `PATCH|DELETE /api/admin/categories/[id]`
 
-## Perintah Pemeliharaan (CLI)
+## Ganti Data Produk
 
-- Pembersihan data server: `curl -X POST https://<app>.vercel.app/api/maintenance`
-- Pembersihan cache global: `curl -X POST https://<app>.vercel.app/api/revalidate`
+Edit `src/data/products.ts` lalu jalankan `node scripts/seed-payota.mjs`, atau kelola langsung
+dari CMS admin. Gambar produk digambar otomatis sebagai render SVG premium (tidak ada broken
+image); bila ingin foto asli, atau kelola lewat kolom `image` di `<ProductImage />`.
 
-## Update Website yang AMAN (Data & Login Tidak Hilang)
+## Verifikasi usia
 
-1. **Jangan pernah** menjalankan migration secara manual di produksi — file tersebut `DROP SCHEMA public CASCADE` dan menghapus seluruh data. File sudah punya safety guard yang membatalkan eksekusi bila database sudah berisi data.
-2. Untuk update skema aman, jalankan `npm run db:migrate`; hanya file `NNN_*.sql` baru yang diterapkan (dicatat di `schema_migrations`).
-3. Setelah deploy, buka **Admin → Developer → Cache Control** lalu **PURGE ALL CACHE (AMAN)** untuk merevalidasi ISR/CDN dan membersihkan cache browser tanpa menghapus sesi login admin maupun bookmark favorit pengunjung (kunci `site_*` dipertahankan).
-
-## Struktur Project
-
-```
-src/
-├── app/           # Halaman & route (Next.js App Router)
-│   ├── admin/     # Panel admin (karya, services, users, dll)
-│   ├── api/       # API routes (maintenance, revalidate, storage, logout)
-│   └── ...        # Halaman publik (karya, layanan, review, bantuan)
-├── components/    # Komponen UI (Header, Footer, home sections)
-├── data/          # Data statis (site-data.ts)
-├── hooks/         # Custom hooks (use-bookmarks, use-toast, use-admin-data)
-└── lib/           # Utilitas terpusat
-    ├── formatters.ts   # formatPrice, formatCompactNumber
-    ├── queries.ts      # Supabase query functions
-    ├── supabase.ts     # Supabase client
-    └── types.ts        # Type definitions
-
-migrations/
-├── 001_vape_store_schema.sql   # Satu-satunya skema (tabel products, reviews, settings, dll)
-└── README.md
-```
-
----
-
-_Vape Store — Dark Theme Katalog & Layanan._
-_Designed by Ran Dev - v1.0 Premium Release_
+Situs memiliki age gate "21+" (pernyataan mandiri, disimpan 30 hari per perangkat) sebelum konten
+dibuka untuk pengunjung.

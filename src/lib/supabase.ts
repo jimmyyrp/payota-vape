@@ -1,25 +1,29 @@
-import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+
+const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 /**
- * Supabase Client Configuration v19.0
- * Menggunakan host produksi opymtspoyjvfbtrrrfzg.supabase.co
- * Handle missing env vars gracefully during build time
+ * Klien publik (anon) — aman dipakai dari server maupun browser.
+ * RLS membatasi pembacaan ke data aktif saja.
  */
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://opymtspoyjvfbtrrrfzg.supabase.co';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-
-/**
- * Buat Supabase client hanya jika key tersedia.
- * Di build time (SSR tanpa env), kembalikan dummy client agar build tidak crash.
- */
-function createSupabaseClient(): SupabaseClient {
-  if (!supabaseAnonKey) {
-    // Build-time fallback: buat client minimum agar TypeScript tidak error
-    // Namun semua query akan gagal secara graceful di runtime
-    return createClient(supabaseUrl, 'dummy-key-build-time-fallback');
+export function getPublicClient(): SupabaseClient {
+  if (!url || !anonKey) {
+    throw new Error("NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY belum diisi di .env");
   }
-  return createClient(supabaseUrl, supabaseAnonKey);
+  return createClient(url, anonKey);
 }
 
-export const supabase = createSupabaseClient();
+/**
+ * Klien admin (service role) — SERVER ONLY. Melewati RLS.
+ * Jangan pernah dipakai dari komponen/klien browser.
+ */
+export function getAdminClient(): SupabaseClient {
+  if (!url || !serviceRoleKey) {
+    throw new Error("SUPABASE_SERVICE_ROLE_KEY belum diisi di .env");
+  }
+  return createClient(url, serviceRoleKey, {
+    auth: { persistSession: false },
+  });
+}

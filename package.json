@@ -3,13 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "gen:version": "node scripts/gen-version.mjs",
-    "dev": "npm run gen:version && next dev --turbopack -p 9002",
-    "build": "npm run gen:version && next build",
+    "dev": "next dev --turbopack -p 9002",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "db:migrate": "node scripts/migrate.mjs",
     "clean": "rm -rf .next node_modules && npm install"
   },
   "dependencies": {
