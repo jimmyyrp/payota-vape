@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
+import * as AlertDialog from "@radix-ui/react-alert-dialog";
 import {
   Plus,
   Pencil,
@@ -65,6 +66,14 @@ interface ProductInput {
 }
 
 type Toast = { kind: "ok" | "err"; text: string } | null;
+
+interface ConfirmAction {
+  title: string;
+  description: string;
+  confirmLabel: string;
+  danger?: boolean;
+  onConfirm: () => void;
+}
 
 const ART_OPTIONS = [
   "device", "slim", "pod", "air", "orb", "dock", "shield", "strap", "carry", "studio", "one",
@@ -163,7 +172,7 @@ export function AdminDashboard({
   });
   const [savingCategory, setSavingCategory] = useState(false);
 
-  const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
+  const [confirm, setConfirm] = useState<ConfirmAction | null>(null);
 
   const showToast = useCallback((kind: "ok" | "err", text: string) => {
     setToast({ kind, text });
@@ -249,13 +258,45 @@ export function AdminDashboard({
     }
   };
 
+  const requestToggleActive = (row: DbProduct) => {
+    if (row.is_active) {
+      setConfirm({
+        title: "Nonaktifkan produk?",
+        description: `"${row.name}" tidak akan tampil di situs publik (katalog, beranda, dan pencarian) sampai diaktifkan kembali.`,
+        confirmLabel: "Nonaktifkan",
+        onConfirm: () => toggleActive(row),
+      });
+    } else {
+      toggleActive(row);
+    }
+  };
+
+  const requestDeleteProduct = (row: DbProduct) => {
+    setConfirm({
+      title: "Hapus produk?",
+      description: `"${row.name}" (/${row.slug}) akan dihapus permanen dari katalog. Tindakan ini tidak bisa dibatalkan.`,
+      confirmLabel: "Hapus Produk",
+      danger: true,
+      onConfirm: () => removeProduct(row.id),
+    });
+  };
+
+  const requestDeleteCategory = (row: DbCategory) => {
+    setConfirm({
+      title: "Hapus kategori?",
+      description: `"${row.name}" (/${row.slug}) akan dihapus permanen dan tidak lagi dipakai sebagai filter di situs.`,
+      confirmLabel: "Hapus Kategori",
+      danger: true,
+      onConfirm: () => removeCategory(row.id),
+    });
+  };
+
   const removeProduct = async (id: number) => {
     try {
       const res = await fetch(`/api/admin/products/${id}`, { method: "DELETE" });
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data.message ?? "Gagal menghapus.");
       setProducts((prev) => prev.filter((p) => p.id !== id));
-      setConfirmDelete(null);
       showToast("ok", "Produk dihapus.");
     } catch (error) {
       showToast("err", (error as Error).message);
@@ -306,13 +347,11 @@ export function AdminDashboard({
   };
 
   const removeCategory = async (id: number) => {
-    if (!confirmDelete) return;
     try {
       const res = await fetch(`/api/admin/categories/${id}`, { method: "DELETE" });
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data.message ?? "Gagal menghapus.");
       setCategories((prev) => prev.filter((c) => c.id !== id));
-      setConfirmDelete(null);
       showToast("ok", "Kategori dihapus.");
     } catch (error) {
       showToast("err", (error as Error).message);
@@ -379,55 +418,168 @@ export function AdminDashboard({
         ))}
       </div>
 
-      {/* Tab */}
-      <div className="card-surface flex items-center gap-1 p-1.5">
-        {(
-          [
-            { key: "products" as const, label: "Produk" },
-            { key: "categories" as const, label: "Kategori" },
-          ]
-        ).map((t) => (
-          <button
-            key={t.key}
-            type="button"
-            onClick={() => setTab(t.key)}
-            className={`flex-1 rounded-xl px-4 py-2.5 text-[11px] font-bold uppercase tracking-[0.2em] transition-colors sm:flex-none sm:px-6 ${
-              tab === t.key
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
-        <div className="ml-auto hidden pr-1 sm:block">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+      {/* Navigasi: sidebar desktop + segmen mobile */}
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+        <aside
+          aria-label="Navigasi admin"
+          className="hidden w-56 shrink-0 flex-col gap-1 rounded-[1.25rem] border border-white/[0.08] bg-[#0D0D0D] p-2 lg:sticky lg:top-20 lg:flex"
+        >
+          <p className="px-3 pb-2 pt-1 text-[10px] font-bold uppercase tracking-[0.24em] text-muted-foreground">
+            Navigasi
+          </p>
+          {(
+            [
+              { key: "products" as const, label: "Produk", icon: Boxes },
+              { key: "categories" as const, label: "Kategori", icon: Tags },
+            ]
+          ).map((item) => (
+            <button
+              key={item.key}
+              type="button"
+              onClick={() => setTab(item.key)}
+              aria-current={tab === item.key ? "page" : undefined}
+              className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[11px] font-bold uppercase tracking-[0.18em] transition-colors ${
+                tab === item.key
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-white/[0.04] hover:text-foreground"
+              }`}
+            >
+              <item.icon className="h-4 w-4 shrink-0" aria-hidden />
+              {item.label}
+            </button>
+          ))}
+          <p className="px-3 pb-1 pt-4 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
             {tab === "products"
               ? `${filteredProducts.length} dari ${products.length} produk`
               : `${categories.length} kategori`}
           </p>
-        </div>
-      </div>
+        </aside>
 
-      {tab === "products" ? (
-        <section className="card-surface overflow-hidden">
-          <div className="flex flex-col gap-3 border-b border-white/[0.07] p-4 sm:flex-row sm:items-center sm:justify-between">
-            <input
-              type="search"
-              placeholder="Cari produk / kategori / slug..."
-              aria-label="Cari produk"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className={`${inputClass} sm:max-w-xs`}
-            />
-            <button type="button" onClick={openCreate} className="btn-primary">
-              <Plus className="h-4 w-4" aria-hidden />
-              Tambah Produk
-            </button>
+        <div className="min-w-0 flex-1">
+          {/* Segmen mobile */}
+          <div className="card-surface mb-5 flex items-center gap-1 p-1.5 lg:hidden">
+            {(
+              [
+                { key: "products" as const, label: "Produk" },
+                { key: "categories" as const, label: "Kategori" },
+              ]
+            ).map((t) => (
+              <button
+                key={t.key}
+                type="button"
+                onClick={() => setTab(t.key)}
+                className={`flex-1 rounded-xl px-4 py-2.5 text-[11px] font-bold uppercase tracking-[0.2em] transition-colors ${
+                  tab === t.key
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[760px] border-collapse text-left">
+      {tab === "products" ? (
+        <>
+          {/* Mobile: toolbar + kartu */}
+          <div className="flex flex-col gap-3 md:hidden">
+            <div className="flex items-center gap-2">
+              <input
+                type="search"
+                placeholder="Cari produk..."
+                aria-label="Cari produk"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className={inputClass}
+              />
+              <button type="button" onClick={openCreate} className="btn-primary shrink-0 px-4">
+                <Plus className="h-4 w-4" aria-hidden />
+                Tambah
+              </button>
+            </div>
+
+            {filteredProducts.length === 0 && (
+              <p className="rounded-[1.25rem] border border-white/[0.08] bg-[#0D0D0D] px-4 py-12 text-center text-sm text-muted-foreground">
+                Tidak ada produk yang cocok.
+              </p>
+            )}
+
+            <ul className="flex flex-col gap-3">
+              {filteredProducts.map((p) => (
+                <li
+                  key={p.id}
+                  className={`card-surface p-4 ${!p.is_active ? "opacity-60" : ""}`}
+                >
+                  <div className="flex items-start gap-3">
+                    <span
+                      className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-white/10"
+                      style={{ background: `radial-gradient(circle, ${p.glow}22, transparent)` }}
+                      aria-hidden
+                    >
+                      <span className="text-[10px] font-black text-white/60">
+                        {p.name.slice(0, 2).toUpperCase()}
+                      </span>
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="truncate text-sm font-semibold">{p.name}</p>
+                        <span
+                          className={`chip shrink-0 ${
+                            p.is_active
+                              ? "border-white/20 bg-white/[0.06] text-foreground"
+                              : "border-white/10 bg-white/[0.03] text-muted-foreground"
+                          }`}
+                        >
+                          {p.is_active ? "Aktif" : "Nonaktif"}
+                        </span>
+                      </div>
+                      <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
+                        /{p.slug} · {p.category}
+                      </p>
+                      <p className="mt-1.5 text-sm font-bold tabular-nums">{p.price}</p>
+                    </div>
+                  </div>
+                  <div className="mt-3 flex items-center justify-between border-t border-white/[0.05] pt-3">
+                    <div className="flex items-center gap-1.5">
+                      <IconButton onClick={() => requestToggleActive(p)} label={p.is_active ? "Nonaktifkan" : "Aktifkan"}>
+                        {p.is_active ? <EyeOff className="h-4 w-4" aria-hidden /> : <Eye className="h-4 w-4" aria-hidden />}
+                      </IconButton>
+                      <IconButton onClick={() => toggleFeatured(p)} label={p.featured ? "Hapus unggulan" : "Jadikan unggulan"}>
+                        {p.featured ? <Star className="h-4 w-4 text-primary" aria-hidden /> : <StarOff className="h-4 w-4" aria-hidden />}
+                      </IconButton>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <IconButton onClick={() => openEdit(p)} label="Edit">
+                        <Pencil className="h-4 w-4" aria-hidden />
+                      </IconButton>
+                      <IconButton onClick={() => requestDeleteProduct(p)} label="Hapus" danger>
+                        <Trash2 className="h-4 w-4" aria-hidden />
+                      </IconButton>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Desktop: tabel */}
+          <section className="card-surface hidden overflow-hidden md:block">
+            <div className="flex flex-col gap-3 border-b border-white/[0.07] p-4 sm:flex-row sm:items-center sm:justify-between">
+              <input
+                type="search"
+                placeholder="Cari produk / kategori / slug..."
+                aria-label="Cari produk"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className={`${inputClass} sm:max-w-xs`}
+              />
+              <button type="button" onClick={openCreate} className="btn-primary">
+                <Plus className="h-4 w-4" aria-hidden />
+                Tambah Produk
+              </button>
+            </div>
+
+            <table className="w-full border-collapse text-left">
               <thead>
                 <tr className="border-b border-white/[0.07] text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
                   <th className="px-4 py-3">#</th>
@@ -506,77 +658,51 @@ export function AdminDashboard({
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-1.5">
-                        <IconButton onClick={() => toggleActive(p)} label={p.is_active ? "Nonaktifkan" : "Aktifkan"}>
+                        <IconButton onClick={() => requestToggleActive(p)} label={p.is_active ? "Nonaktifkan" : "Aktifkan"}>
                           {p.is_active ? <EyeOff className="h-4 w-4" aria-hidden /> : <Eye className="h-4 w-4" aria-hidden />}
                         </IconButton>
                         <IconButton onClick={() => openEdit(p)} label="Edit">
                           <Pencil className="h-4 w-4" aria-hidden />
                         </IconButton>
-                        {confirmDelete === p.id ? (
-                          <button
-                            type="button"
-                            onMouseLeave={() => setConfirmDelete(null)}
-                            onClick={() => removeProduct(p.id)}
-                            className="flex h-9 items-center gap-1.5 rounded-lg border border-red-400/30 bg-red-400/10 px-3 text-[10px] font-bold uppercase tracking-[0.14em] text-red-300 transition-colors hover:bg-red-400/20"
-                          >
-                            Yakin?
-                          </button>
-                        ) : (
-                          <IconButton onClick={() => setConfirmDelete(p.id)} label="Hapus" danger>
-                            <Trash2 className="h-4 w-4" aria-hidden />
-                          </IconButton>
-                        )}
+                        <IconButton onClick={() => requestDeleteProduct(p)} label="Hapus" danger>
+                          <Trash2 className="h-4 w-4" aria-hidden />
+                        </IconButton>
                       </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          </div>
-        </section>
+          </section>
+        </>
       ) : (
-        <section className="card-surface overflow-hidden">
-          <div className="flex items-center justify-between border-b border-white/[0.07] p-4">
-            <p className="text-sm text-muted-foreground">
-              Kategori digunakan untuk filter di situs (halaman katalog & beranda).
-            </p>
-            <button type="button" onClick={openCategoryCreate} className="btn-primary">
-              <Plus className="h-4 w-4" aria-hidden />
-              Tambah Kategori
-            </button>
-          </div>
+        <>
+          {/* Mobile: kartu kategori */}
+          <div className="flex flex-col gap-3 md:hidden">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs text-muted-foreground">Kategori untuk filter situs.</p>
+              <button type="button" onClick={openCategoryCreate} className="btn-primary shrink-0 px-4">
+                <Plus className="h-4 w-4" aria-hidden />
+                Tambah
+              </button>
+            </div>
 
-          <table className="w-full border-collapse text-left">
-            <thead>
-              <tr className="border-b border-white/[0.07] text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-                <th className="px-4 py-3">Slug</th>
-                <th className="px-4 py-3">Nama</th>
-                <th className="px-4 py-3">Tagline</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3 text-right">Aksi</th>
-              </tr>
-            </thead>
-            <tbody>
-              {categories.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="px-4 py-12 text-center text-sm text-muted-foreground">
-                    Belum ada kategori.
-                  </td>
-                </tr>
-              )}
+            {categories.length === 0 && (
+              <p className="rounded-[1.25rem] border border-white/[0.08] bg-[#0D0D0D] px-4 py-12 text-center text-sm text-muted-foreground">
+                Belum ada kategori.
+              </p>
+            )}
+
+            <ul className="flex flex-col gap-3">
               {categories.map((c) => (
-                <tr
-                  key={c.id}
-                  className={`border-b border-white/[0.05] hover:bg-white/[0.02] ${
-                    !c.is_active ? "opacity-45" : ""
-                  }`}
-                >
-                  <td className="px-4 py-3 text-xs text-muted-foreground">/{c.slug}</td>
-                  <td className="px-4 py-3 text-sm font-semibold">{c.name}</td>
-                  <td className="px-4 py-3 text-sm text-muted-foreground">{c.tagline}</td>
-                  <td className="px-4 py-3">
+                <li key={c.id} className={`card-surface p-4 ${!c.is_active ? "opacity-60" : ""}`}>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold">{c.name}</p>
+                      <p className="mt-0.5 truncate text-[11px] text-muted-foreground">/{c.slug}</p>
+                    </div>
                     <span
-                      className={`chip ${
+                      className={`chip shrink-0 ${
                         c.is_active
                           ? "border-white/20 bg-white/[0.06] text-foreground"
                           : "border-white/10 bg-white/[0.03] text-muted-foreground"
@@ -584,34 +710,134 @@ export function AdminDashboard({
                     >
                       {c.is_active ? "Aktif" : "Nonaktif"}
                     </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center justify-end gap-1.5">
-                      <IconButton onClick={() => openCategoryEdit(c)} label="Edit">
-                        <Pencil className="h-4 w-4" aria-hidden />
-                      </IconButton>
-                      {confirmDelete === -c.id ? (
-                        <button
-                          type="button"
-                          onMouseLeave={() => setConfirmDelete(null)}
-                          onClick={() => removeCategory(c.id)}
-                          className="flex h-9 items-center gap-1.5 rounded-lg border border-red-400/30 bg-red-400/10 px-3 text-[10px] font-bold uppercase tracking-[0.14em] text-red-300 transition-colors hover:bg-red-400/20"
-                        >
-                          Yakin?
-                        </button>
-                      ) : (
-                        <IconButton onClick={() => setConfirmDelete(-c.id)} label="Hapus" danger>
+                  </div>
+                  <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{c.tagline}</p>
+                  <div className="mt-3 flex items-center justify-end gap-1.5 border-t border-white/[0.05] pt-3">
+                    <IconButton onClick={() => openCategoryEdit(c)} label="Edit">
+                      <Pencil className="h-4 w-4" aria-hidden />
+                    </IconButton>
+                    <IconButton onClick={() => requestDeleteCategory(c)} label="Hapus" danger>
+                      <Trash2 className="h-4 w-4" aria-hidden />
+                    </IconButton>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Desktop: tabel kategori */}
+          <section className="card-surface hidden overflow-hidden md:block">
+            <div className="flex items-center justify-between border-b border-white/[0.07] p-4">
+              <p className="text-sm text-muted-foreground">
+                Kategori digunakan untuk filter di situs (halaman katalog & beranda).
+              </p>
+              <button type="button" onClick={openCategoryCreate} className="btn-primary">
+                <Plus className="h-4 w-4" aria-hidden />
+                Tambah Kategori
+              </button>
+            </div>
+
+            <table className="w-full border-collapse text-left">
+              <thead>
+                <tr className="border-b border-white/[0.07] text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+                  <th className="px-4 py-3">Slug</th>
+                  <th className="px-4 py-3">Nama</th>
+                  <th className="px-4 py-3">Tagline</th>
+                  <th className="px-4 py-3">Status</th>
+                  <th className="px-4 py-3 text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                {categories.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="px-4 py-12 text-center text-sm text-muted-foreground">
+                      Belum ada kategori.
+                    </td>
+                  </tr>
+                )}
+                {categories.map((c) => (
+                  <tr
+                    key={c.id}
+                    className={`border-b border-white/[0.05] hover:bg-white/[0.02] ${
+                      !c.is_active ? "opacity-45" : ""
+                    }`}
+                  >
+                    <td className="px-4 py-3 text-xs text-muted-foreground">/{c.slug}</td>
+                    <td className="px-4 py-3 text-sm font-semibold">{c.name}</td>
+                    <td className="px-4 py-3 text-sm text-muted-foreground">{c.tagline}</td>
+                    <td className="px-4 py-3">
+                      <span
+                        className={`chip ${
+                          c.is_active
+                            ? "border-white/20 bg-white/[0.06] text-foreground"
+                            : "border-white/10 bg-white/[0.03] text-muted-foreground"
+                        }`}
+                      >
+                        {c.is_active ? "Aktif" : "Nonaktif"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <IconButton onClick={() => openCategoryEdit(c)} label="Edit">
+                          <Pencil className="h-4 w-4" aria-hidden />
+                        </IconButton>
+                        <IconButton onClick={() => requestDeleteCategory(c)} label="Hapus" danger>
                           <Trash2 className="h-4 w-4" aria-hidden />
                         </IconButton>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </section>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+        </>
       )}
+        </div>
+      </div>
+
+      {/* Dialog konfirmasi nonaktifkan / hapus */}
+      <AlertDialog.Root
+        open={!!confirm}
+        onOpenChange={(open) => {
+          if (!open) setConfirm(null);
+        }}
+      >
+        <AlertDialog.Portal>
+          <AlertDialog.Overlay className="fixed inset-0 z-[120] bg-black/80 backdrop-blur-sm" />
+          <AlertDialog.Content className="fixed left-1/2 top-1/2 z-[130] w-[calc(100vw-32px)] max-w-sm -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-white/10 bg-[#0D0D0D] p-7 outline-none">
+            <AlertDialog.Title className="text-lg font-bold tracking-tight">
+              {confirm?.title}
+            </AlertDialog.Title>
+            <AlertDialog.Description className="mt-2 text-sm leading-relaxed text-muted-foreground">
+              {confirm?.description}
+            </AlertDialog.Description>
+            <div className="mt-6 flex flex-col-reverse items-stretch gap-3 sm:flex-row sm:items-center sm:justify-end">
+              <AlertDialog.Cancel asChild>
+                <button
+                  type="button"
+                  className="h-11 rounded-full border border-white/10 bg-white/[0.03] px-6 text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  Batal
+                </button>
+              </AlertDialog.Cancel>
+              <AlertDialog.Action asChild>
+                <button
+                  type="button"
+                  onClick={() => confirm?.onConfirm()}
+                  className={
+                    confirm?.danger
+                      ? "inline-flex h-11 items-center justify-center gap-2 rounded-full border border-red-400/30 bg-red-400/10 px-6 text-[11px] font-bold uppercase tracking-[0.18em] text-red-300 transition-colors hover:bg-red-400/20"
+                      : "btn-primary"
+                  }
+                >
+                  {confirm?.confirmLabel}
+                </button>
+              </AlertDialog.Action>
+            </div>
+          </AlertDialog.Content>
+        </AlertDialog.Portal>
+      </AlertDialog.Root>
 
       {/* Dialog form produk */}
       <Dialog.Root open={formOpen} onOpenChange={setFormOpen}>
