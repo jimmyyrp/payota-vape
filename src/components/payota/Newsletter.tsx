@@ -1,28 +1,19 @@
 "use client";
 
-import { useState } from "react";
-import { ArrowRight, Check } from "lucide-react";
+import { MessageCircle, Instagram, Clock, MapPin, ArrowUpRight } from "lucide-react";
+import { CONTACT, whatsappUrlWithMessage } from "@/lib/contact";
 import { Reveal } from "./Reveal";
 
+/**
+ * Band "Tetap Terhubung" — bukan newsletter email (tidak ada infrastruktur
+ * mailer). Kontak langsung via WhatsApp + Instagram + info jam & lokasi.
+ */
 export function Newsletter() {
-  const [email, setEmail] = useState("");
-  const [done, setDone] = useState(false);
-
-  const submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const value = email.trim();
-    if (!value || !value.includes("@")) return;
-    setDone(true);
-  };
-
   return (
-    <section className="container-px py-24 lg:py-32" aria-label="Kabar terbaru">
+    <section className="container-px py-24 lg:py-32" aria-label="Kontak dan ikuti PAYOTA">
       <Reveal>
         <div className="relative overflow-hidden rounded-[2rem] border border-white/[0.07] bg-[#0D0D0D] px-6 py-16 text-center md:px-16 md:py-20">
-          <div
-            className="absolute inset-0 bg-grid opacity-20"
-            aria-hidden
-          />
+          <div className="absolute inset-0 bg-grid opacity-20" aria-hidden />
           <div
             className="absolute left-1/2 top-0 h-64 w-[560px] -translate-x-1/2 rounded-full blur-[120px]"
             style={{ background: "radial-gradient(closest-side, rgba(255,255,255,0.08), transparent)" }}
@@ -38,41 +29,48 @@ export function Newsletter() {
               className="mx-auto mt-5 max-w-xl font-headline font-extrabold uppercase tracking-tighter"
               style={{ fontSize: "clamp(1.8rem, 4vw, 3rem)" }}
             >
-              Dapatkan info koleksi baru
+              Tanya produk, cek stok, atau pesan
             </h2>
             <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-muted-foreground">
-              Cerita desain, rilis studio, dan akses awal — langsung ke email Anda. Tanpa spam,
-              hanya koleksi.
+              Obrolan langsung dengan tim PAYOTA untuk konsultasi koleksi, ketersediaan, dan
+              pengiriman — dibalas cepat di jam buka. Cerita & rilis terbaru ada di Instagram.
             </p>
 
-            {done ? (
-              <p className="mx-auto mt-9 flex max-w-md items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-6 py-4 text-sm font-semibold text-foreground">
-                <Check className="h-4 w-4 text-primary" aria-hidden />
-                Terima kasih — email Anda sudah terdaftar.
-              </p>
-            ) : (
-              <form
-                onSubmit={submit}
-                className="mx-auto mt-9 flex max-w-md flex-col gap-3 sm:flex-row"
+            <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <a
+                href={whatsappUrlWithMessage(
+                  "Halo PAYOTA Solok, saya mau tanya soal koleksi.",
+                )}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-primary h-12"
               >
-                <label htmlFor="newsletter-email" className="sr-only">
-                  Alamat email
-                </label>
-                <input
-                  id="newsletter-email"
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Masukkan email Anda..."
-                  className="h-12 flex-1 rounded-full border border-white/10 bg-[#080808] px-6 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-white/25 focus:outline-none"
-                />
-                <button type="submit" className="btn-primary h-12">
-                  Berlangganan
-                  <ArrowRight className="h-4 w-4" aria-hidden />
-                </button>
-              </form>
-            )}
+                <MessageCircle className="h-4 w-4" aria-hidden />
+                Chat WhatsApp
+              </a>
+              <a
+                href={CONTACT.instagramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-12 items-center gap-2 rounded-full border border-white/10 px-7 text-[11px] font-bold uppercase tracking-[0.18em] text-foreground transition-colors hover:border-white/30"
+              >
+                <Instagram className="h-4 w-4" aria-hidden />
+                Ikuti Instagram
+                <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
+              </a>
+            </div>
+
+            <div className="mx-auto mt-8 flex max-w-lg flex-col items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground sm:flex-row sm:gap-6">
+              <span className="flex items-center gap-2">
+                <Clock className="h-3.5 w-3.5 text-primary" aria-hidden />
+                {CONTACT.openLabel} · {CONTACT.openTime}
+              </span>
+              <span className="hidden h-1 w-1 rounded-full bg-white/20 sm:block" aria-hidden />
+              <span className="flex items-center gap-2">
+                <MapPin className="h-3.5 w-3.5 text-primary" aria-hidden />
+                {CONTACT.mapsLabel}
+              </span>
+            </div>
           </div>
         </div>
       </Reveal>

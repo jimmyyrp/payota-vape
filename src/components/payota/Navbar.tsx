@@ -14,7 +14,6 @@ const NAV_LINKS = [
   { label: "Koleksi", href: "/#collections" },
   { label: "Katalog", href: "/catalog" },
   { label: "Tentang", href: "/#about" },
-  { label: "Jurnal", href: "/#journal" },
   { label: "Kontak", href: "/#kontak" },
 ];
 

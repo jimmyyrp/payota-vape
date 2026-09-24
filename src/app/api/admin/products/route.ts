@@ -26,7 +26,7 @@ export async function GET() {
 
 function normalize(input: ProductInput): ProductInput {
   return {
-    slug: String(input.slug ?? "").trim() || "produk",
+    slug: String(input.slug ?? "").trim(),
     index: Number(input.index) || 0,
     category: String(input.category ?? "").trim() || "Perangkat",
     name: String(input.name ?? "").trim(),
@@ -39,7 +39,7 @@ function normalize(input: ProductInput): ProductInput {
       : [],
     art: String(input.art ?? "device").trim() || "device",
     glow: String(input.glow ?? "#E4E4E7").trim() || "#E4E4E7",
-    glowSoft: String(input.glowSoft ?? "rgba(228,228,231,0.14)").trim(),
+    glowSoft: String(input.glowSoft ?? "").trim(),
     badge: String(input.badge ?? "").trim(),
     featured: !!input.featured,
     price: String(input.price ?? "").trim(),

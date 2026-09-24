@@ -12,7 +12,7 @@ async function guard() {
 
 function normalize(input: ProductInput): ProductInput {
   return {
-    slug: String(input.slug ?? "").trim() || "produk",
+    slug: String(input.slug ?? "").trim(),
     index: Number(input.index) || 0,
     category: String(input.category ?? "").trim() || "Perangkat",
     name: String(input.name ?? "").trim(),

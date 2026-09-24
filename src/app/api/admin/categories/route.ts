@@ -12,7 +12,7 @@ async function guard() {
 
 function normalize(input: CategoryInput): CategoryInput {
   return {
-    slug: String(input.slug ?? "").trim().toLowerCase().replace(/[^a-z0-9-]+/g, "-") || "kategori",
+    slug: String(input.slug ?? "").trim().toLowerCase().replace(/[^a-z0-9-]+/g, "-"),
     name: String(input.name ?? "").trim(),
     tagline: String(input.tagline ?? "").trim(),
     isActive: input.isActive !== false,

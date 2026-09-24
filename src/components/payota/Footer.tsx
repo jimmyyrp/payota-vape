@@ -10,7 +10,6 @@ const GROUPS = [
       { label: "Koleksi", href: "/#collections" },
       { label: "Katalog", href: "/catalog" },
       { label: "Tentang", href: "/#about" },
-      { label: "Jurnal", href: "/#journal" },
     ],
   },
   {

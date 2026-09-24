@@ -1,6 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import * as Dialog from "@radix-ui/react-dialog";
 import * as AlertDialog from "@radix-ui/react-alert-dialog";
 import {
@@ -17,6 +19,10 @@ import {
   RefreshCw,
   Save,
   CheckCircle2,
+  LayoutGrid,
+  ExternalLink,
+  LogOut,
+  Lightbulb,
 } from "lucide-react";
 import type { ProductSpec } from "@/data/products";
 
@@ -136,10 +142,18 @@ function slugify(value: string): string {
     .replace(/(^-|-$)/g, "");
 }
 
+/** Glow lembut (rgba) diturunkan otomatis dari hex glow — tanpa input manual. */
+function softGlowFromHex(hex: string): string {
+  const match = /^#?([a-f\d]{6})$/i.exec((hex ?? "").trim());
+  if (!match) return "rgba(228,228,231,0.14)";
+  const num = parseInt(match[1], 16);
+  return `rgba(${(num >> 16) & 255},${(num >> 8) & 255},${num & 255},0.14)`;
+}
+
 const inputClass =
-  "h-10 w-full rounded-lg border border-white/10 bg-white/[0.03] px-3 text-sm text-foreground outline-none transition-colors focus:border-primary";
+  "h-10 w-full rounded-lg border border-white/10 bg-white/[0.03] px-3 text-base text-foreground outline-none transition-colors focus:border-primary";
 const textareaClass =
-  "w-full rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-foreground outline-none transition-colors focus:border-primary";
+  "w-full rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-base text-foreground outline-none transition-colors focus:border-primary";
 const labelClass =
   "text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground";
 const checkboxClass = "peer flex items-center justify-center";
@@ -171,8 +185,30 @@ export function AdminDashboard({
     isActive: true,
   });
   const [savingCategory, setSavingCategory] = useState(false);
+  const [pendingCategoryName, setPendingCategoryName] = useState<string | null>(null);
 
   const [confirm, setConfirm] = useState<ConfirmAction | null>(null);
+  const router = useRouter();
+
+  const performLogout = async () => {
+    try {
+      await fetch("/api/admin/logout", { method: "POST" });
+    } catch {
+      /* token tetap dibersihkan di cookie */
+    }
+    router.replace("/admin/login");
+  };
+
+  const requestLogout = () => {
+    setConfirm({
+      title: "Keluar dari dashboard?",
+      description:
+        "Sesi admin di perangkat ini akan diakhiri. Anda perlu login lagi untuk membuka dashboard.",
+      confirmLabel: "Logout",
+      danger: true,
+      onConfirm: performLogout,
+    });
+  };
 
   const showToast = useCallback((kind: "ok" | "err", text: string) => {
     setToast({ kind, text });
@@ -199,10 +235,15 @@ export function AdminDashboard({
   const saveProduct = async () => {
     setSaving(true);
     try {
+      const body = {
+        ...form,
+        slug: form.slug === slugify(form.name) ? "" : form.slug,
+        glowSoft: softGlowFromHex(form.glow),
+      };
       const res = await fetch(editingId ? `/api/admin/products/${editingId}` : "/api/admin/products", {
         method: editingId ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(body),
       });
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data.message ?? "Gagal menyimpan.");
@@ -327,7 +368,10 @@ export function AdminDashboard({
         {
           method: categoryForm.id ? "PATCH" : "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(categoryForm),
+          body: JSON.stringify({
+            ...categoryForm,
+            slug: categoryForm.slug === slugify(categoryForm.name) ? "" : categoryForm.slug,
+          }),
         },
       );
       const data = await res.json();
@@ -338,6 +382,10 @@ export function AdminDashboard({
       ].sort((a, b) => a.id - b.id);
       setCategories(updated);
       setCategoryOpen(false);
+      if (pendingCategoryName !== null && categoryForm.id === 0) {
+        setForm((f) => ({ ...f, category: data.category.name }));
+        setPendingCategoryName(null);
+      }
       showToast("ok", categoryForm.id ? "Kategori diperbarui." : "Kategori dibuat.");
     } catch (error) {
       showToast("err", (error as Error).message);
@@ -371,13 +419,152 @@ export function AdminDashboard({
 
   const activeCount = products.filter((p) => p.is_active).length;
   const featuredCount = products.filter((p) => p.featured && p.is_active).length;
+  const inactiveCount = products.length - activeCount;
+  const activePercent = products.length
+    ? Math.round((activeCount / products.length) * 100)
+    : 0;
+  const featuredPercent = activeCount
+    ? Math.round((featuredCount / activeCount) * 100)
+    : 0;
+
+  const inactiveProducts = useMemo(
+    () => products.filter((p) => !p.is_active),
+    [products],
+  );
+  const noPriceProducts = useMemo(
+    () => products.filter((p) => p.is_active && !p.price.trim()),
+    [products],
+  );
+  const noBadgeProducts = useMemo(
+    () => products.filter((p) => p.is_active && !(p.badge ?? "").trim()),
+    [products],
+  );
+  const emptyCategories = useMemo(
+    () =>
+      categories.filter(
+        (c) => !products.some((p) => p.is_active && p.category === c.name),
+      ),
+    [products, categories],
+  );
+
+  const categoryStats = useMemo(() => {
+    const map = new Map<string, { total: number; active: number }>();
+    for (const p of products) {
+      const key = p.category.trim() || "Tanpa kategori";
+      const cur = map.get(key) ?? { total: 0, active: 0 };
+      cur.total += 1;
+      if (p.is_active) cur.active += 1;
+      map.set(key, cur);
+    }
+    return [...map.entries()]
+      .map(([name, v]) => ({ name, ...v }))
+      .sort((a, b) => b.total - a.total);
+  }, [products]);
+
+  const maxCategoryCount = categoryStats.length
+    ? Math.max(...categoryStats.map((c) => c.total))
+    : 1;
+
+  interface Insight {
+    tone: "ok" | "warn";
+    title: string;
+    detail: string;
+    action?: string;
+    onAction?: () => void;
+  }
+
+  const insights: Insight[] = [];
+
+  if (inactiveProducts.length > 0) {
+    const names = inactiveProducts
+      .slice(0, 3)
+      .map((p) => p.name)
+      .join(", ");
+    insights.push({
+      tone: "warn",
+      title: `${inactiveCount} produk nonaktif`,
+      detail: `${inactiveProducts.length} produk tidak tampil di katalog, beranda, dan pencarian.`,
+      action: "Lihat produk",
+      onAction: () => setTab("products"),
+    });
+    insights.push({
+      tone: "warn",
+      title: "Daftar nonaktif",
+      detail:
+        names + (inactiveProducts.length > 3 ? `, dan ${inactiveProducts.length - 3} lainnya.` : "."),
+    });
+  }
+
+  if (noPriceProducts.length > 0) {
+    insights.push({
+      tone: "warn",
+      title: `${noPriceProducts.length} produk aktif tanpa harga`,
+      detail:
+        "Pembeli tidak bisa tahu harga di halaman produk. Isi harga agar tidak kehilangan pembeli.",
+      action: "Periksa harga",
+      onAction: () => setTab("products"),
+    });
+  }
+
+  if (noBadgeProducts.length > 0 && activeCount >= 3) {
+    insights.push({
+      tone: "warn",
+      title: `${noBadgeProducts.length} produk belum punya badge`,
+      detail:
+        "Badge (Baru / Unggulan / Terbatas) membantu menonjolkan produk di katalog.",
+      action: "Tambah badge",
+      onAction: () => setTab("products"),
+    });
+  }
+
+  if (activeCount > 0 && featuredCount === 0) {
+    insights.push({
+      tone: "warn",
+      title: "Belum ada produk unggulan",
+      detail:
+        "Beranda menampilkan pilihan unggulan. Tandai minimal satu produk untuk mengisinya.",
+      action: "Pilih unggulan",
+      onAction: () => setTab("products"),
+    });
+  } else if (activeCount > 0 && featuredPercent < 20) {
+    insights.push({
+      tone: "warn",
+      title: `Unggulan baru ${featuredPercent}% dari produk aktif`,
+      detail:
+        `${featuredCount} dari ${activeCount} produk aktif ditandai unggulan. Pertimbangkan menambah unggulan agar beranda lebih kaya.`,
+      action: "Kelola unggulan",
+      onAction: () => setTab("products"),
+    });
+  }
+
+  if (emptyCategories.length > 0) {
+    insights.push({
+      tone: "warn",
+      title: `${emptyCategories.length} kategori tanpa produk aktif`,
+      detail:
+        emptyCategories
+          .slice(0, 3)
+          .map((c) => c.name)
+          .join(", ") + " belum punya produk yang tampil.",
+      action: "Isi kategori",
+      onAction: () => setTab("products"),
+    });
+  }
+
+  if (inactiveCount === 0 && noPriceProducts.length === 0) {
+    insights.push({
+      tone: "ok",
+      title: "Katalog sehat",
+      detail: `Semua ${products.length} produk aktif dan harga terisi. Tidak ada masalah yang mendesak.`,
+    });
+  }
 
   return (
     <div className="flex flex-col gap-6">
       {/* Toast */}
       {toast && (
         <div
-          className={`sticky top-20 z-50 flex items-center gap-2 rounded-xl border px-4 py-3 text-sm ${
+          className={`sticky top-4 z-50 flex items-center gap-2 rounded-xl border px-4 py-3 text-sm ${
             toast.kind === "ok"
               ? "border-white/15 bg-white/[0.06] text-foreground"
               : "border-red-400/25 bg-red-400/10 text-red-300"
@@ -397,10 +584,11 @@ export function AdminDashboard({
       )}
 
       {/* Ringkasan */}
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
         {[
           { label: "Total Produk", value: products.length, icon: Boxes },
           { label: "Aktif", value: activeCount, icon: Eye },
+          { label: "Nonaktif", value: inactiveCount, icon: EyeOff },
           { label: "Unggulan", value: featuredCount, icon: Star },
           { label: "Kategori", value: categories.length, icon: Tags },
         ].map((stat) => (
@@ -418,12 +606,107 @@ export function AdminDashboard({
         ))}
       </div>
 
+      {/* Analisis & Saran + Distribusi kategori */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1.55fr_1fr]">
+        {/* Saran */}
+        <section className="card-surface p-5" aria-label="Analisis dan saran">
+          <div className="flex items-center gap-2">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <Lightbulb className="h-4 w-4" aria-hidden />
+            </span>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-muted-foreground">
+                Analisis & Saran
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {activePercent}% katalog aktif · {featuredPercent}% aktif diunggulkan
+              </p>
+            </div>
+          </div>
+          <ul className="mt-4 space-y-2.5">
+            {insights.map((item) => (
+              <li
+                key={item.title}
+                className={`flex items-start justify-between gap-3 rounded-xl border px-4 py-3 ${
+                  item.tone === "ok"
+                    ? "border-white/[0.07] bg-white/[0.02]"
+                    : "border-amber-400/20 bg-amber-400/[0.05]"
+                }`}
+              >
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold">{item.title}</p>
+                  <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                    {item.detail}
+                  </p>
+                </div>
+                {item.action && item.onAction && (
+                  <button
+                    type="button"
+                    onClick={item.onAction}
+                    className="shrink-0 text-[10px] font-bold uppercase tracking-[0.16em] text-primary transition-opacity hover:opacity-80"
+                  >
+                    {item.action}
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        {/* Distribusi kategori */}
+        <section className="card-surface p-5" aria-label="Distribusi kategori">
+          <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-muted-foreground">
+            Distribusi Kategori
+          </p>
+          <ul className="mt-4 space-y-4">
+            {categoryStats.length === 0 && (
+              <li className="text-sm text-muted-foreground">
+                Belum ada produk untuk dianalisis.
+              </li>
+            )}
+            {categoryStats.map((cat) => (
+              <li key={cat.name}>
+                <div className="flex items-center justify-between gap-2 text-sm">
+                  <p className="truncate font-semibold">{cat.name}</p>
+                  <p className="shrink-0 text-xs tabular-nums text-muted-foreground">
+                    {cat.active}/{cat.total} aktif
+                  </p>
+                </div>
+                <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
+                  <div
+                    className="h-full rounded-full bg-primary"
+                    style={{
+                      width: `${Math.max((cat.total / maxCategoryCount) * 100, 6)}%`,
+                      opacity: cat.active === 0 ? 0.35 : 1,
+                    }}
+                  />
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      </div>
+
       {/* Navigasi: sidebar desktop + segmen mobile */}
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
         <aside
           aria-label="Navigasi admin"
-          className="hidden w-56 shrink-0 flex-col gap-1 rounded-[1.25rem] border border-white/[0.08] bg-[#0D0D0D] p-2 lg:sticky lg:top-20 lg:flex"
+          className="hidden w-56 shrink-0 flex-col rounded-[1.25rem] border border-white/[0.08] bg-[#0D0D0D] p-2 lg:sticky lg:top-4 lg:flex lg:h-[calc(100vh-32px)]"
         >
+          <div className="flex items-center gap-2.5 px-3 pb-4 pt-1">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 text-primary">
+              <LayoutGrid className="h-4 w-4" aria-hidden />
+            </span>
+            <div>
+              <p className="font-headline text-xs font-extrabold tracking-[0.24em] text-foreground">
+                PAYOTA <span className="text-primary">Admin</span>
+              </p>
+              <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+                Manajemen Konten
+              </p>
+            </div>
+          </div>
+
           <p className="px-3 pb-2 pt-1 text-[10px] font-bold uppercase tracking-[0.24em] text-muted-foreground">
             Navigasi
           </p>
@@ -448,14 +731,70 @@ export function AdminDashboard({
               {item.label}
             </button>
           ))}
-          <p className="px-3 pb-1 pt-4 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
-            {tab === "products"
-              ? `${filteredProducts.length} dari ${products.length} produk`
-              : `${categories.length} kategori`}
-          </p>
+
+          <div className="mt-auto flex flex-col gap-1 px-1 pt-5">
+            <p className="px-2 pb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+              {tab === "products"
+                ? `${filteredProducts.length} dari ${products.length} produk`
+                : `${categories.length} kategori`}
+            </p>
+            <Link
+              href="/"
+              target="_blank"
+              className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:bg-white/[0.04] hover:text-foreground"
+            >
+              <ExternalLink className="h-4 w-4 shrink-0" aria-hidden />
+              Buka Situs
+            </Link>
+            <button
+              type="button"
+              onClick={requestLogout}
+              className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:bg-red-400/10 hover:text-red-400"
+            >
+              <LogOut className="h-4 w-4 shrink-0" aria-hidden />
+              Logout
+            </button>
+          </div>
         </aside>
 
         <div className="min-w-0 flex-1">
+          {/* Bar atas mobile */}
+          <div className="mb-4 flex items-center justify-between gap-2 lg:hidden">
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/15 text-primary">
+                <LayoutGrid className="h-4 w-4" aria-hidden />
+              </span>
+              <div>
+                <p className="font-headline text-xs font-extrabold tracking-[0.24em] text-foreground">
+                  PAYOTA <span className="text-primary">Admin</span>
+                </p>
+                <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+                  Manajemen Konten
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Link
+                href="/"
+                target="_blank"
+                aria-label="Buka situs"
+                title="Buka situs"
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <ExternalLink className="h-4 w-4" aria-hidden />
+              </Link>
+              <button
+                type="button"
+                onClick={requestLogout}
+                aria-label="Logout"
+                title="Logout"
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 text-muted-foreground transition-colors hover:border-red-400/40 hover:text-red-400"
+              >
+                <LogOut className="h-4 w-4" aria-hidden />
+              </button>
+            </div>
+          </div>
+
           {/* Segmen mobile */}
           <div className="card-surface mb-5 flex items-center gap-1 p-1.5 lg:hidden">
             {(
@@ -869,28 +1208,65 @@ export function AdminDashboard({
 
               <Field label="Slug (URL produk)">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">/product/</span>
+                  <span className="text-sm text-muted-foreground">#</span>
                   <input
-                    className={inputClass}
-                    value={form.slug}
-                    onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value }))}
-                    placeholder="core"
+                    className={`${inputClass} opacity-90`}
+                    value={
+                      form.slug || slugify(form.name)
+                    }
+                    readOnly
+                    title="Slug dibuat otomatis dari nama"
                   />
                 </div>
               </Field>
 
-              <Field label="Kategori">
-                <input
-                  className={inputClass}
-                  list="payota-categories"
-                  value={form.category}
-                  onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
-                />
-                <datalist id="payota-categories">
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.name} />
-                  ))}
-                </datalist>
+              <Field label="Kategori *">
+                <div className="flex items-center gap-2">
+                  <select
+                    className={inputClass}
+                    value={
+                      categories.some((c) => c.name === form.category)
+                        ? form.category
+                        : "__custom__"
+                    }
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      if (v === "__new_category__") {
+                        setPendingCategoryName(form.category || "");
+                        openCategoryCreate();
+                        return;
+                      }
+                      setForm((f) => ({ ...f, category: v }));
+                    }}
+                  >
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.name}>
+                        {c.name}
+                      </option>
+                    ))}
+                    {form.category &&
+                      !categories.some((c) => c.name === form.category) && (
+                        <option value="__custom__" disabled>
+                          {form.category || "Tanpa kategori"}
+                        </option>
+                      )}
+                    {categories.length > 0 && (
+                      <option value="__new_category__">+ Kategori baru...</option>
+                    )}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPendingCategoryName(form.category || "");
+                      openCategoryCreate();
+                    }}
+                    aria-label="Tambah kategori baru"
+                    title="Tambah kategori baru"
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/10 text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                  >
+                    <Plus className="h-4 w-4" aria-hidden />
+                  </button>
+                </div>
               </Field>
 
               <Field label="Urutan (index)">
@@ -954,14 +1330,6 @@ export function AdminDashboard({
                     onChange={(e) => setForm((f) => ({ ...f, glow: e.target.value }))}
                   />
                 </div>
-              </Field>
-
-              <Field label="Glow lembut (rgba) — optional">
-                <input
-                  className={inputClass}
-                  value={form.glowSoft}
-                  onChange={(e) => setForm((f) => ({ ...f, glowSoft: e.target.value }))}
-                />
               </Field>
 
               <Field label="Tagline">
@@ -1112,12 +1480,10 @@ export function AdminDashboard({
                   }
                 />
               </Field>
-              <Field label="Slug">
-                <input
-                  className={inputClass}
-                  value={categoryForm.slug}
-                  onChange={(e) => setCategoryForm((f) => ({ ...f, slug: e.target.value }))}
-                />
+              <Field label="Slug (URL)">
+                <p className="rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2.5 text-sm text-muted-foreground">
+                  /{categoryForm.slug || slugify(categoryForm.name) || "kategori"}
+                </p>
               </Field>
               <Field label="Tagline">
                 <input
