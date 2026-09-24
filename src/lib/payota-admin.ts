@@ -16,6 +16,7 @@ export interface ProductInput {
   featured: boolean;
   price: string;
   isActive: boolean;
+  image?: string;
 }
 
 export interface CategoryInput {
@@ -51,6 +52,7 @@ function productToDb(input: ProductInput) {
     featured: !!input.featured,
     price: input.price,
     is_active: !!input.isActive,
+    image: input.image && input.image.trim() ? input.image.trim() : null,
   };
 }
 

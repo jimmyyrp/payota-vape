@@ -3,7 +3,6 @@ import { Hero } from "./Hero";
 import { CatalogSection } from "./CatalogSection";
 import { FeaturedProduct } from "./FeaturedProduct";
 import { BrandSection } from "./BrandSection";
-import { Newsletter } from "./Newsletter";
 import { KontakSection } from "./KontakSection";
 
 export function Home({
@@ -28,7 +27,6 @@ export function Home({
       />
       <FeaturedProduct product={featured} />
       <BrandSection />
-      <Newsletter />
       <KontakSection />
     </>
   );

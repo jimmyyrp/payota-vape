@@ -26,6 +26,7 @@ interface ProductRow {
   badge: string | null;
   featured: boolean;
   price: string;
+  image: string | null;
 }
 
 const DEFAULT_ART: ArtVariant = "device";
@@ -55,6 +56,7 @@ function toProduct(row: ProductRow): Product {
     glow: row.glow,
     glowSoft: row.glow_soft,
     price: row.price,
+    image: row.image ?? undefined,
   };
 }
 

@@ -25,6 +25,7 @@ import {
   Lightbulb,
 } from "lucide-react";
 import type { ProductSpec } from "@/data/products";
+import { ProductImageSetter } from "./product-image-setter";
 
 interface DbProduct {
   id: number;
@@ -42,6 +43,7 @@ interface DbProduct {
   featured: boolean;
   price: string;
   is_active: boolean;
+  image: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -69,6 +71,7 @@ interface ProductInput {
   featured: boolean;
   price: string;
   isActive: boolean;
+  image: string;
 }
 
 type Toast = { kind: "ok" | "err"; text: string } | null;
@@ -102,6 +105,7 @@ const EMPTY_FORM: ProductInput = {
   featured: false,
   price: "",
   isActive: true,
+  image: "",
 };
 
 function parseSpecs(raw: ProductSpec[] | string): ProductSpec[] {
@@ -130,6 +134,7 @@ function rowToInput(row: DbProduct): ProductInput {
     featured: row.featured,
     price: row.price,
     isActive: row.is_active,
+    image: row.image ?? "",
   };
 }
 
@@ -315,7 +320,7 @@ export function AdminDashboard({
   const requestDeleteProduct = (row: DbProduct) => {
     setConfirm({
       title: "Hapus produk?",
-      description: `"${row.name}" (/${row.slug}) akan dihapus permanen dari katalog. Tindakan ini tidak bisa dibatalkan.`,
+      description: `"${row.name}" akan dihapus permanen dari katalog. Tindakan ini tidak bisa dibatalkan.`,
       confirmLabel: "Hapus Produk",
       danger: true,
       onConfirm: () => removeProduct(row.id),
@@ -325,7 +330,7 @@ export function AdminDashboard({
   const requestDeleteCategory = (row: DbCategory) => {
     setConfirm({
       title: "Hapus kategori?",
-      description: `"${row.name}" (/${row.slug}) akan dihapus permanen dan tidak lagi dipakai sebagai filter di situs.`,
+      description: `"${row.name}" akan dihapus permanen dan tidak lagi dipakai sebagai filter di situs.`,
       confirmLabel: "Hapus Kategori",
       danger: true,
       onConfirm: () => removeCategory(row.id),
@@ -873,7 +878,7 @@ export function AdminDashboard({
                         </span>
                       </div>
                       <p className="mt-0.5 truncate text-[11px] text-muted-foreground">
-                        /{p.slug} · {p.category}
+                        {p.category}
                       </p>
                       <p className="mt-1.5 text-sm font-bold tabular-nums">{p.price}</p>
                     </div>
@@ -906,7 +911,7 @@ export function AdminDashboard({
             <div className="flex flex-col gap-3 border-b border-white/[0.07] p-4 sm:flex-row sm:items-center sm:justify-between">
               <input
                 type="search"
-                placeholder="Cari produk / kategori / slug..."
+                placeholder="Cari produk atau kategori..."
                 aria-label="Cari produk"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -959,7 +964,6 @@ export function AdminDashboard({
                         </span>
                         <div>
                           <p className="text-sm font-semibold">{p.name}</p>
-                          <p className="text-[11px] text-muted-foreground">/{p.slug}</p>
                         </div>
                       </div>
                     </td>
@@ -1038,7 +1042,6 @@ export function AdminDashboard({
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <p className="truncate text-sm font-semibold">{c.name}</p>
-                      <p className="mt-0.5 truncate text-[11px] text-muted-foreground">/{c.slug}</p>
                     </div>
                     <span
                       className={`chip shrink-0 ${
@@ -1079,7 +1082,6 @@ export function AdminDashboard({
             <table className="w-full border-collapse text-left">
               <thead>
                 <tr className="border-b border-white/[0.07] text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-                  <th className="px-4 py-3">Slug</th>
                   <th className="px-4 py-3">Nama</th>
                   <th className="px-4 py-3">Tagline</th>
                   <th className="px-4 py-3">Status</th>
@@ -1089,7 +1091,7 @@ export function AdminDashboard({
               <tbody>
                 {categories.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="px-4 py-12 text-center text-sm text-muted-foreground">
+                    <td colSpan={4} className="px-4 py-12 text-center text-sm text-muted-foreground">
                       Belum ada kategori.
                     </td>
                   </tr>
@@ -1101,7 +1103,6 @@ export function AdminDashboard({
                       !c.is_active ? "opacity-45" : ""
                     }`}
                   >
-                    <td className="px-4 py-3 text-xs text-muted-foreground">/{c.slug}</td>
                     <td className="px-4 py-3 text-sm font-semibold">{c.name}</td>
                     <td className="px-4 py-3 text-sm text-muted-foreground">{c.tagline}</td>
                     <td className="px-4 py-3">
@@ -1331,6 +1332,23 @@ export function AdminDashboard({
                   />
                 </div>
               </Field>
+
+              <div className="md:col-span-2">
+                <div className="flex items-center justify-between">
+                  <span className={labelClass}>Foto Produk (opsional)</span>
+                  <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+                    1:1
+                  </span>
+                </div>
+                <div className="mt-2">
+                  <ProductImageSetter
+                    value={form.image}
+                    onChange={(dataUrl) =>
+                      setForm((f) => ({ ...f, image: dataUrl }))
+                    }
+                  />
+                </div>
+              </div>
 
               <Field label="Tagline">
                 <input

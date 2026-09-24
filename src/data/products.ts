@@ -34,6 +34,7 @@ export interface Product {
   glow: string;
   glowSoft: string;
   price: string;
+  image?: string;
 }
 
 const P = "PAYOTA";

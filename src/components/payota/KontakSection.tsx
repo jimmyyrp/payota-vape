@@ -66,7 +66,56 @@ export function KontakSection() {
         }
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <Reveal>
+        <div className="relative overflow-hidden rounded-[2rem] border border-white/[0.07] bg-[#0D0D0D] px-6 py-16 text-center md:px-16 md:py-16">
+          <div className="absolute inset-0 bg-grid opacity-20" aria-hidden />
+          <div
+            className="absolute left-1/2 top-0 h-64 w-[560px] -translate-x-1/2 rounded-full blur-[120px]"
+            style={{ background: "radial-gradient(closest-side, rgba(255,255,255,0.08), transparent)" }}
+            aria-hidden
+          />
+          <div className="absolute inset-0 grain" aria-hidden />
+
+          <div className="relative">
+            <h3
+              className="mx-auto max-w-xl font-headline font-extrabold uppercase tracking-tighter"
+              style={{ fontSize: "clamp(1.8rem, 4vw, 3rem)" }}
+            >
+              Tanya produk, cek stok, atau pesan
+            </h3>
+            <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-muted-foreground">
+              Obrolan langsung dengan tim PAYOTA untuk konsultasi koleksi, ketersediaan, dan
+              pengiriman — dibalas cepat di jam buka. Cerita & rilis terbaru ada di Instagram.
+            </p>
+
+            <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <a
+                href={whatsappUrlWithMessage(
+                  "Halo PAYOTA Solok, saya mau tanya soal koleksi.",
+                )}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-primary h-12"
+              >
+                <MessageCircle className="h-4 w-4" aria-hidden />
+                Chat WhatsApp
+              </a>
+              <a
+                href={CONTACT.instagramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-12 items-center gap-2 rounded-full border border-white/10 px-7 text-[11px] font-bold uppercase tracking-[0.18em] text-foreground transition-colors hover:border-white/30"
+              >
+                <Instagram className="h-4 w-4" aria-hidden />
+                Ikuti Instagram
+                <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
+              </a>
+            </div>
+          </div>
+        </div>
+      </Reveal>
+
+      <div className="mt-20 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 md:mt-24">
         {CARDS.map((card, i) => (
           <Reveal key={card.title} delay={i * 80}>
             <Link

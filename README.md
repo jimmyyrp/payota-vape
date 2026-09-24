@@ -18,7 +18,7 @@ antarmuka dalam Bahasa Indonesia.
 src/
 ├── app/
 │   ├── layout.tsx            # Font, metadata, Navbar/Footer/Provider/AgeGate global
-│   ├── page.tsx              # Home (Hero, Koleksi, Featured, Tentang, Jurnal, Newsletter)
+│   ├── page.tsx              # Home (Hero, Koleksi, Featured, Tentang, Jurnal, Kontak)
 │   ├── catalog/page.tsx      # Halaman katalog lengkap (dari DB)
 │   ├── product/[id]/page.tsx # Halaman detail produk (dari DB)
 │   ├── admin/                # CMS: login, dashboard produk & kategori
@@ -71,7 +71,9 @@ node scripts/seed-payota.mjs
 
 Edit `src/data/products.ts` lalu jalankan `node scripts/seed-payota.mjs`, atau kelola langsung
 dari CMS admin. Gambar produk digambar otomatis sebagai render SVG premium (tidak ada broken
-image); bila ingin foto asli, atau kelola lewat kolom `image` di `<ProductImage />`.
+image). Bila ingin foto asli, unggah via form produk di dashboard admin (fitur upload, crop,
+zoom, dan rotasi persegi 1:1 — hasil disimpan di kolom `image`, lalu dipakai otomatis oleh
+`<ProductImage />` di seluruh situs; kosongkan untuk kembali ke visual SVG).
 
 ## Verifikasi usia
 

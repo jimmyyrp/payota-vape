@@ -177,8 +177,9 @@ export function ProductImage({
   className?: string;
 }) {
   const [failed, setFailed] = useState(false);
+  const imageSrc = image ?? product.image;
 
-  if (!image) {
+  if (!imageSrc) {
     return (
       <div className={`relative overflow-hidden ${className ?? ""}`}>
         {failed ? (
@@ -211,7 +212,7 @@ export function ProductImage({
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src={image}
+      src={imageSrc}
       alt={`${product.name} visual`}
       loading="lazy"
       onError={() => setFailed(true)}

@@ -44,6 +44,7 @@ function normalize(input: ProductInput): ProductInput {
     featured: !!input.featured,
     price: String(input.price ?? "").trim(),
     isActive: input.isActive !== false,
+    image: String(input.image ?? "").trim(),
   };
 }
 
