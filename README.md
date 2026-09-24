@@ -61,20 +61,7 @@ Seed 4 kategori + 10 produk dummy ke database (upsert berdasarkan slug):
 node scripts/seed-payota.mjs
 ```
 
-## Login Admin / CMS
-
-- Halaman login: `/admin/login`
-- Login awal di-seed oleh migrasi:
-
-| Username | Password  | Role      |
-|----------|-----------|-----------|
-| `admin`  | `admin123`| admin     |
-| `dev`    | `dev123`  | developer |
-
-Sesi bertahan 12 jam. Ganti password default segera setelah deploy — password di-hash
-otomatis oleh trigger database saat insert/update.
-
-### Endpoint API admin (semua butuh cookie sesi)
+## Endpoint API admin (semua butuh cookie sesi)
 
 - `POST /api/admin/login` · `POST /api/admin/logout`
 - `GET|POST /api/admin/products` · `GET|PATCH|DELETE /api/admin/products/[id]`
