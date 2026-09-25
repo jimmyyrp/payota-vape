@@ -25,7 +25,10 @@ import {
   Lightbulb,
   Menu,
   Search,
+  BookOpen,
+  ChevronRight,
 } from "lucide-react";
+import HelpPanel from "./help-panel";
 import type { ProductSpec } from "@/data/products";
 import { ProductImageSetter } from "./product-image-setter";
 import { uploadProductImage, deleteProductImage } from "./upload-product-image";
@@ -99,6 +102,7 @@ const BADGE_OPTIONS = ["", "Unggulan", "Baru", "Terbatas"];
 const NAV_ITEMS = [
   { key: "products" as const, label: "Produk", icon: Boxes },
   { key: "categories" as const, label: "Kategori", icon: Tags },
+  { key: "help" as const, label: "Bantuan", icon: BookOpen },
 ];
 
 const EMPTY_FORM: ProductInput = {
@@ -171,7 +175,9 @@ export function AdminDashboard({
 }) {
   const [products, setProducts] = useState<DbProduct[]>(initialProducts);
   const [categories, setCategories] = useState<DbCategory[]>(initialCategories);
-  const [tab, setTab] = useState<"products" | "categories">("products");
+  type AdminTab = "products" | "categories" | "help";
+
+  const [tab, setTab] = useState<AdminTab>("products");
   const [toast, setToast] = useState<Toast>(null);
   const [search, setSearch] = useState("");
   const [asideOpen, setAsideOpen] = useState(false);
@@ -371,9 +377,13 @@ export function AdminDashboard({
   };
 
   const requestDeleteCategory = (row: DbCategory) => {
+    const usedCount = products.filter((p) => p.category === row.name).length;
     setConfirm({
       title: "Hapus kategori?",
-      description: `"${row.name}" akan dihapus permanen dan tidak lagi dipakai sebagai filter di situs.`,
+      description:
+        usedCount > 0
+          ? `"${row.name}" masih dipakai oleh ${usedCount} produk. Kategori akan dihapus permanen; nama kategori pada produk tetap tersimpan, tetapi pengaturan (tagline & status aktif) kategori ini hilang.`
+          : `"${row.name}" akan dihapus permanen dan tidak lagi dipakai sebagai filter di situs.`,
       confirmLabel: "Hapus Kategori",
       danger: true,
       onConfirm: () => removeCategory(row.id),
@@ -774,7 +784,9 @@ export function AdminDashboard({
               <p className="px-1 pb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
                 {tab === "products"
                   ? `${filteredProducts.length} dari ${products.length} produk`
-                  : `${categories.length} kategori`}
+                  : tab === "help"
+                    ? "Bantuan & Panduan"
+                    : `${categories.length} kategori`}
               </p>
               <Link
                 href="/"
@@ -797,8 +809,10 @@ export function AdminDashboard({
         </div>
       </div>
 
-      {/* Ringkasan */}
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
+      {tab !== "help" && (
+        <>
+          {/* Ringkasan */}
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
         {[
           { label: "Total Produk", value: products.length, icon: Boxes },
           { label: "Aktif", value: activeCount, icon: Eye },
@@ -899,7 +913,9 @@ export function AdminDashboard({
             ))}
           </ul>
         </section>
-      </div>
+          </div>
+        </>
+      )}
 
       {/* Navigasi: sidebar desktop + segmen mobile */}
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
@@ -945,7 +961,9 @@ export function AdminDashboard({
             <p className="px-2 pb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
               {tab === "products"
                 ? `${filteredProducts.length} dari ${products.length} produk`
-                : `${categories.length} kategori`}
+                : tab === "help"
+                  ? "Bantuan & Panduan"
+                  : `${categories.length} kategori`}
             </p>
             <Link
               href="/"
@@ -973,6 +991,7 @@ export function AdminDashboard({
               [
                 { key: "products" as const, label: "Produk" },
                 { key: "categories" as const, label: "Kategori" },
+                { key: "help" as const, label: "Bantuan" },
               ]
             ).map((t) => (
               <button
@@ -990,7 +1009,9 @@ export function AdminDashboard({
             ))}
           </div>
 
-      {tab === "products" ? (
+      {tab === "help" ? (
+        <HelpPanel />
+      ) : tab === "products" ? (
         <>
           {/* Mobile: toolbar + kartu */}
           <div className="flex flex-col gap-3 md:hidden">
@@ -1358,6 +1379,39 @@ export function AdminDashboard({
               Semua perubahan di sini langsung tampil di situs publik.
             </Dialog.Description>
 
+            <details className="group mt-4 rounded-xl border border-white/10 bg-white/[0.02]">
+              <summary className="flex cursor-pointer list-none items-center gap-2 px-3.5 py-2.5 text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:text-foreground">
+                <BookOpen className="h-4 w-4 text-primary" aria-hidden />
+                Panduan mengisi form
+                <span className="ml-auto text-muted-foreground/70 transition-transform group-open:rotate-90">
+                  <ChevronRight className="h-4 w-4" aria-hidden />
+                </span>
+              </summary>
+              <ul className="space-y-2 border-t border-white/[0.06] px-3.5 py-3 text-xs leading-relaxed text-muted-foreground">
+                <li>
+                  <b className="text-foreground">Nama &amp; Tagline</b> wajib terasa jelas —
+                  contoh: nama "PAYOTA Box", tagline "Compact. Tenang. Premium."
+                </li>
+                <li>
+                  <b className="text-foreground">Urutan</b> kecil tampil lebih dulu; pakai
+                  kelipatan 10 agar mudah menyisipkan produk baru.
+                </li>
+                <li>
+                  <b className="text-foreground">Foto</b> disimpan otomatis sebagai WebP di
+                  penyimpanan situs dan akan menggantikan foto lama saat disimpan. Maksimal 4 MB.
+                </li>
+                <li>
+                  <b className="text-foreground">Spesifikasi</b>: ketik di kotak pencarian
+                  (mis. "baterai") untuk memakai daftar siap pakai, atau pakai{" "}
+                  <b className="text-foreground">Tambah Baris</b> untuk menulis bebas.
+                </li>
+                <li>
+                  Simpan dengan status <b className="text-foreground">Aktif</b> mati dulu jika
+                  ingin meninjau sebelum produk tampil di situs.
+                </li>
+              </ul>
+            </details>
+
             <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
               <Field label="Nama Produk *">
                 <input
@@ -1699,6 +1753,30 @@ export function AdminDashboard({
             <Dialog.Description className="mt-1 text-sm text-muted-foreground">
               Nama kategori dipakai sebagai filter di situs.
             </Dialog.Description>
+
+            <details className="group mt-4 rounded-xl border border-white/10 bg-white/[0.02]">
+              <summary className="flex cursor-pointer list-none items-center gap-2 px-3.5 py-2.5 text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:text-foreground">
+                <BookOpen className="h-4 w-4 text-primary" aria-hidden />
+                Panduan mengisi form
+                <span className="ml-auto text-muted-foreground/70 transition-transform group-open:rotate-90">
+                  <ChevronRight className="h-4 w-4" aria-hidden />
+                </span>
+              </summary>
+              <ul className="space-y-2 border-t border-white/[0.06] px-3.5 py-3 text-xs leading-relaxed text-muted-foreground">
+                <li>
+                  <b className="text-foreground">Nama</b> singkat dan jelas, contoh
+                  "Perangkat", "Aksesori", "Esensial".
+                </li>
+                <li>
+                  <b className="text-foreground">Tagline</b> kalimat pendek pelengkap nama
+                  kategori.
+                </li>
+                <li>
+                  Kategori dengan status <b className="text-foreground">Aktif</b> mati tidak
+                  ditampilkan di situs, tetapi produk di dalamnya tetap aman tersimpan.
+                </li>
+              </ul>
+            </details>
 
             <div className="mt-6 flex flex-col gap-4">
               <Field label="Nama *">
