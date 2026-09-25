@@ -23,9 +23,14 @@ export function LoginForm({ autoFocus = false }: { autoFocus?: boolean }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
       });
-      const data = await res.json();
-      if (!res.ok || !data.ok) {
-        setError(data.message ?? "Login gagal.");
+      let data: { ok?: boolean; message?: string } | null = null;
+      try {
+        data = await res.json();
+      } catch {
+        /* respons bukan JSON (mis. HTML error page) */
+      }
+      if (!res.ok || !data?.ok) {
+        setError(data?.message ?? "Login gagal. Coba lagi beberapa saat.");
         return;
       }
       setSuccess(true);

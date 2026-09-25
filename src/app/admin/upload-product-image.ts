@@ -4,6 +4,21 @@ export interface UploadImageResult {
   message?: string;
 }
 
+interface ApiEnvelope {
+  ok?: boolean;
+  url?: string;
+  message?: string;
+}
+
+/** Baca body JSON dengan aman — null bila respons bukan JSON valid. */
+async function safeJson(res: Response): Promise<ApiEnvelope | null> {
+  try {
+    return (await res.json()) as ApiEnvelope;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Unggah foto produk (data URL WebP hasil crop) ke Supabase Storage via
  * endpoint admin. `prev` = URL publik foto lama yang akan dihapus.
@@ -19,9 +34,9 @@ export async function uploadProductImage(args: {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(args),
     });
-    const data = await res.json();
-    if (!res.ok || !data.ok) {
-      return { ok: false, message: data.message ?? "Gagal mengunggah foto." };
+    const data = await safeJson(res);
+    if (!res.ok || !data?.ok) {
+      return { ok: false, message: data?.message ?? "Gagal mengunggah foto." };
     }
     return { ok: true, url: data.url };
   } catch {
@@ -37,9 +52,9 @@ export async function deleteProductImage(url: string): Promise<UploadImageResult
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ url }),
     });
-    const data = await res.json();
-    if (!res.ok || !data.ok) {
-      return { ok: false, message: data.message ?? "Gagal menghapus foto." };
+    const data = await safeJson(res);
+    if (!res.ok || !data?.ok) {
+      return { ok: false, message: data?.message ?? "Gagal menghapus foto." };
     }
     return { ok: true };
   } catch {

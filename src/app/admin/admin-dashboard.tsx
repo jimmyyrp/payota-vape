@@ -27,6 +27,7 @@ import {
   Search,
   BookOpen,
   ChevronRight,
+  AlertTriangle,
 } from "lucide-react";
 import HelpPanel from "./help-panel";
 import type { ProductSpec } from "@/data/products";
@@ -158,8 +159,26 @@ function slugify(value: string): string {
     .replace(/(^-|-$)/g, "");
 }
 
+interface ApiEnvelope {
+  ok?: boolean;
+  message?: string;
+  product?: DbProduct;
+  category?: DbCategory;
+}
+
+/** Baca body JSON dengan aman — null bila respons bukan JSON valid (mis. HTML error page). */
+async function safeJson<T>(res: Response): Promise<T | null> {
+  try {
+    return (await res.json()) as T;
+  } catch {
+    return null;
+  }
+}
+
 const inputClass =
   "h-10 w-full rounded-lg border border-white/10 bg-white/[0.03] px-3 text-base text-foreground outline-none transition-colors focus:border-primary";
+const selectClass =
+  "select-field";
 const textareaClass =
   "w-full rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2 text-base text-foreground outline-none transition-colors focus:border-primary";
 const labelClass =
@@ -249,7 +268,7 @@ export function AdminDashboard({
     let cancelled = false;
     setSpecSearch("");
     fetch("/api/admin/specs", { cache: "no-store" })
-      .then((res) => res.json())
+      .then((res) => safeJson<{ ok?: boolean; specs?: SpecOption[] }>(res))
       .then((data) => {
         if (!cancelled && data?.ok) setSpecOptions(data.specs ?? []);
       })
@@ -299,9 +318,12 @@ export function AdminDashboard({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      const data = await res.json();
-      if (!res.ok || !data.ok) throw new Error(data.message ?? "Gagal menyimpan.");
-      const updated = [...products.filter((p) => p.id !== data.product.id), data.product]
+      const data = await safeJson<ApiEnvelope>(res);
+      if (!res.ok || !data?.ok || !data.product) {
+        throw new Error(data?.message ?? "Gagal menyimpan.");
+      }
+      const saved = data.product;
+      const updated = [...products.filter((p) => p.id !== saved.id), saved]
         .sort((a, b) => a.index - b.index || a.id - b.id);
       setProducts(updated);
       setFormOpen(false);
@@ -322,10 +344,11 @@ export function AdminDashboard({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(next),
       });
-      const data = await res.json();
-      if (!res.ok || !data.ok) throw new Error(data.message ?? "Gagal.");
+      const data = await safeJson<ApiEnvelope>(res);
+      if (!res.ok || !data?.ok || !data.product) throw new Error(data?.message ?? "Gagal.");
+      const updated = data.product;
       setProducts((prev) =>
-        prev.map((p) => (p.id === row.id ? data.product : p)),
+        prev.map((p) => (p.id === row.id ? updated : p)),
       );
       showToast("ok", next.isActive ? "Produk diaktifkan." : "Produk dinonaktifkan.");
     } catch (error) {
@@ -342,10 +365,11 @@ export function AdminDashboard({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(next),
       });
-      const data = await res.json();
-      if (!res.ok || !data.ok) throw new Error(data.message ?? "Gagal.");
+      const data = await safeJson<ApiEnvelope>(res);
+      if (!res.ok || !data?.ok || !data.product) throw new Error(data?.message ?? "Gagal.");
+      const updated = data.product;
       setProducts((prev) =>
-        prev.map((p) => (p.id === row.id ? data.product : p)),
+        prev.map((p) => (p.id === row.id ? updated : p)),
       );
       showToast("ok", next.featured ? "Ditandai sebagai unggulan." : "Unggulan dihapus.");
     } catch (error) {
@@ -393,8 +417,8 @@ export function AdminDashboard({
   const removeProduct = async (id: number) => {
     try {
       const res = await fetch(`/api/admin/products/${id}`, { method: "DELETE" });
-      const data = await res.json();
-      if (!res.ok || !data.ok) throw new Error(data.message ?? "Gagal menghapus.");
+      const data = await safeJson<ApiEnvelope>(res);
+      if (!res.ok || !data?.ok) throw new Error(data?.message ?? "Gagal menghapus.");
       setProducts((prev) => prev.filter((p) => p.id !== id));
       showToast("ok", "Produk dihapus.");
     } catch (error) {
@@ -432,16 +456,19 @@ export function AdminDashboard({
           }),
         },
       );
-      const data = await res.json();
-      if (!res.ok || !data.ok) throw new Error(data.message ?? "Gagal menyimpan.");
+      const data = await safeJson<ApiEnvelope>(res);
+      if (!res.ok || !data?.ok || !data.category) {
+        throw new Error(data?.message ?? "Gagal menyimpan.");
+      }
+      const saved = data.category;
       const updated = [
-        ...categories.filter((c) => c.id !== data.category.id),
-        data.category,
+        ...categories.filter((c) => c.id !== saved.id),
+        saved,
       ].sort((a, b) => a.id - b.id);
       setCategories(updated);
       setCategoryOpen(false);
       if (pendingCategoryName !== null && categoryForm.id === 0) {
-        setForm((f) => ({ ...f, category: data.category.name }));
+        setForm((f) => ({ ...f, category: saved.name }));
         setPendingCategoryName(null);
       }
       showToast("ok", categoryForm.id ? "Kategori diperbarui." : "Kategori dibuat.");
@@ -455,8 +482,8 @@ export function AdminDashboard({
   const removeCategory = async (id: number) => {
     try {
       const res = await fetch(`/api/admin/categories/${id}`, { method: "DELETE" });
-      const data = await res.json();
-      if (!res.ok || !data.ok) throw new Error(data.message ?? "Gagal menghapus.");
+      const data = await safeJson<ApiEnvelope>(res);
+      if (!res.ok || !data?.ok) throw new Error(data?.message ?? "Gagal menghapus.");
       setCategories((prev) => prev.filter((c) => c.id !== id));
       showToast("ok", "Kategori dihapus.");
     } catch (error) {
@@ -658,7 +685,11 @@ export function AdminDashboard({
               : "border-red-400/25 bg-red-400/10 text-red-300"
           }`}
         >
-          <CheckCircle2 className="h-4 w-4" aria-hidden />
+          {toast.kind === "ok" ? (
+            <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden />
+          ) : (
+            <AlertTriangle className="h-4 w-4 shrink-0 text-red-300" aria-hidden />
+          )}
           {toast.text}
           <button
             type="button"
@@ -1431,11 +1462,13 @@ export function AdminDashboard({
               <Field label="Kategori *">
                 <div className="flex items-center gap-2">
                   <select
-                    className={inputClass}
+                    className={selectClass}
                     value={
                       categories.some((c) => c.name === form.category)
                         ? form.category
-                        : "__custom__"
+                        : form.category
+                          ? "__custom__"
+                          : ""
                     }
                     onChange={(e) => {
                       const v = e.target.value;
@@ -1444,9 +1477,13 @@ export function AdminDashboard({
                         openCategoryCreate();
                         return;
                       }
+                      if (v === "__custom__" || v === "") return;
                       setForm((f) => ({ ...f, category: v }));
                     }}
                   >
+                    {categories.length === 0 && (
+                      <option value="">Belum ada kategori</option>
+                    )}
                     {categories.map((c) => (
                       <option key={c.id} value={c.name}>
                         {c.name}
@@ -1455,12 +1492,10 @@ export function AdminDashboard({
                     {form.category &&
                       !categories.some((c) => c.name === form.category) && (
                         <option value="__custom__" disabled>
-                          {form.category || "Tanpa kategori"}
+                          {form.category} (dipakai produk ini)
                         </option>
                       )}
-                    {categories.length > 0 && (
-                      <option value="__new_category__">+ Kategori baru...</option>
-                    )}
+                    <option value="__new_category__">+ Kategori baru...</option>
                   </select>
                   <button
                     type="button"
@@ -1497,7 +1532,7 @@ export function AdminDashboard({
 
               <Field label="Badge">
                 <select
-                  className={inputClass}
+                  className={selectClass}
                   value={form.badge}
                   onChange={(e) => setForm((f) => ({ ...f, badge: e.target.value }))}
                 >
@@ -1511,7 +1546,7 @@ export function AdminDashboard({
 
               <Field label="Varian Art (render SVG)">
                 <select
-                  className={inputClass}
+                  className={selectClass}
                   value={form.art}
                   onChange={(e) => setForm((f) => ({ ...f, art: e.target.value }))}
                 >

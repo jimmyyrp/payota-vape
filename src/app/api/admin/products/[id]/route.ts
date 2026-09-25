@@ -54,6 +54,12 @@ export async function PATCH(request: Request, ctx: RouteCtx) {
   try {
     const raw = (await request.json()) as Partial<ProductInput>;
     const current = raw as ProductInput;
+    if (!current.name?.trim()) {
+      return NextResponse.json(
+        { ok: false, message: "Nama produk wajib diisi." },
+        { status: 400 },
+      );
+    }
     const product = await updateProduct(numericId, normalize(current));
     return NextResponse.json({ ok: true, product });
   } catch (error) {
