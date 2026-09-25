@@ -1,5 +1,6 @@
 import { getAdminClient } from "./supabase";
 import type { ProductSpec } from "@/data/products";
+import { deleteProductImage, extractStoragePath } from "./payota-storage";
 
 export interface ProductInput {
   slug: string;
@@ -86,6 +87,19 @@ export async function updateProduct(id: number, input: ProductInput) {
 
 export async function deleteProduct(id: number) {
   const client = getAdminClient();
+  const { data: row } = await client
+    .from("payota_products")
+    .select("image")
+    .eq("id", id)
+    .maybeSingle();
+  if (row?.image) {
+    try {
+      const path = extractStoragePath(row.image);
+      if (path) await deleteProductImage(path);
+    } catch {
+      /* hapus foto gagal tidak memblokir hapus produk */
+    }
+  }
   const { error } = await client.from("payota_products").delete().eq("id", id);
   if (error) throw new Error(error.message);
 }

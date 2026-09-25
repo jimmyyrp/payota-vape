@@ -23,6 +23,8 @@ import {
   ExternalLink,
   LogOut,
   Lightbulb,
+  Menu,
+  Search,
 } from "lucide-react";
 import type { ProductSpec } from "@/data/products";
 import { ProductImageSetter } from "./product-image-setter";
@@ -73,6 +75,13 @@ interface ProductInput {
 
 type Toast = { kind: "ok" | "err"; text: string } | null;
 
+interface SpecOption {
+  id: number;
+  group_name: string;
+  label: string;
+  value: string;
+}
+
 interface ConfirmAction {
   title: string;
   description: string;
@@ -86,6 +95,11 @@ const ART_OPTIONS = [
 ];
 
 const BADGE_OPTIONS = ["", "Unggulan", "Baru", "Terbatas"];
+
+const NAV_ITEMS = [
+  { key: "products" as const, label: "Produk", icon: Boxes },
+  { key: "categories" as const, label: "Kategori", icon: Tags },
+];
 
 const EMPTY_FORM: ProductInput = {
   slug: "",
@@ -160,6 +174,9 @@ export function AdminDashboard({
   const [tab, setTab] = useState<"products" | "categories">("products");
   const [toast, setToast] = useState<Toast>(null);
   const [search, setSearch] = useState("");
+  const [asideOpen, setAsideOpen] = useState(false);
+  const [specOptions, setSpecOptions] = useState<SpecOption[]>([]);
+  const [specSearch, setSpecSearch] = useState("");
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -209,6 +226,32 @@ export function AdminDashboard({
     const t = setTimeout(() => setToast(null), 3200);
     return () => clearTimeout(t);
   }, [toast]);
+
+  useEffect(() => {
+    if (!asideOpen) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setAsideOpen(false);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [asideOpen]);
+
+  useEffect(() => {
+    setAsideOpen(false);
+  }, [tab]);
+
+  useEffect(() => {
+    if (!formOpen) return;
+    let cancelled = false;
+    setSpecSearch("");
+    fetch("/api/admin/specs", { cache: "no-store" })
+      .then((res) => res.json())
+      .then((data) => {
+        if (!cancelled && data?.ok) setSpecOptions(data.specs ?? []);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [formOpen]);
 
   const openCreate = () => {
     setEditingId(null);
@@ -411,6 +454,36 @@ export function AdminDashboard({
     }
   };
 
+  const specMatches = useMemo(() => {
+    const q = specSearch.trim().toLowerCase();
+    if (!q) return [];
+    return specOptions
+      .filter((s) =>
+        `${s.group_name} ${s.label} ${s.value}`.toLowerCase().includes(q),
+      )
+      .slice(0, 12);
+  }, [specOptions, specSearch]);
+
+  const specGrouped = useMemo(() => {
+    const map = new Map<string, SpecOption[]>();
+    for (const s of specOptions) {
+      const list = map.get(s.group_name) ?? [];
+      list.push(s);
+      map.set(s.group_name, list);
+    }
+    return [...map.entries()];
+  }, [specOptions]);
+
+  const addSpecFromMaster = (spec: SpecOption) => {
+    setForm((f) => {
+      const exists = f.specs.some(
+        (s) => s.label.trim().toLowerCase() === spec.label.trim().toLowerCase(),
+      );
+      if (exists) return f;
+      return { ...f, specs: [...f.specs, { label: spec.label, value: spec.value }] };
+    });
+  };
+
   const filteredProducts = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return products;
@@ -588,6 +661,142 @@ export function AdminDashboard({
         </div>
       )}
 
+      {/* Bar aplikasi + aside drawer (mobile & tablet) */}
+      <div className="lg:hidden">
+        <div className="sticky top-4 z-40 mb-5 flex items-center justify-between gap-2 rounded-[1.25rem] border border-white/10 bg-[#0D0D0D]/90 px-3 py-2.5 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.8)] backdrop-blur-xl">
+          <div className="flex items-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => setAsideOpen(true)}
+              aria-label="Buka menu admin"
+              title="Buka menu admin"
+              className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 text-muted-foreground transition-colors hover:border-white/30 hover:text-foreground"
+            >
+              <Menu className="h-5 w-5" aria-hidden />
+            </button>
+            <div>
+              <p className="font-headline text-sm font-extrabold tracking-[0.24em] text-foreground">
+                PAYOTA <span className="text-primary">Admin</span>
+              </p>
+              <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+                Manajemen Konten
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Link
+              href="/"
+              target="_blank"
+              aria-label="Buka situs"
+              title="Buka situs"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-muted-foreground transition-colors hover:border-white/30 hover:text-foreground"
+            >
+              <ExternalLink className="h-[18px] w-[18px]" aria-hidden />
+            </Link>
+            <button
+              type="button"
+              onClick={requestLogout}
+              aria-label="Logout"
+              title="Logout"
+              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-muted-foreground transition-colors hover:border-red-400/40 hover:text-red-400"
+            >
+              <LogOut className="h-[18px] w-[18px]" aria-hidden />
+            </button>
+          </div>
+        </div>
+
+        {/* Aside drawer mobile */}
+        <div
+          className={`fixed inset-0 z-[60] ${asideOpen ? "" : "pointer-events-none"}`}
+          aria-hidden={!asideOpen}
+        >
+          <div
+            className={`absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity duration-300 ${
+              asideOpen ? "opacity-100" : "opacity-0"
+            }`}
+            onClick={() => setAsideOpen(false)}
+          />
+          <aside
+            role="dialog"
+            aria-modal="true"
+            aria-label="Navigasi admin"
+            className={`absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col border-r border-white/10 bg-[#0E0E10] transition-transform duration-300 ease-out ${
+              asideOpen ? "translate-x-0" : "-translate-x-full"
+            }`}
+          >
+            <div className="flex items-center justify-between gap-2 border-b border-white/[0.06] p-4">
+              <div className="flex items-center gap-2.5">
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-primary">
+                  <LayoutGrid className="h-5 w-5" aria-hidden />
+                </span>
+                <div>
+                  <p className="font-headline text-sm font-extrabold tracking-[0.24em] text-foreground">
+                    PAYOTA <span className="text-primary">Admin</span>
+                  </p>
+                  <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+                    Dashboard
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setAsideOpen(false)}
+                aria-label="Tutup menu admin"
+                className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-white/[0.06] hover:text-foreground"
+              >
+                <X className="h-5 w-5" aria-hidden />
+              </button>
+            </div>
+
+            <p className="px-4 pb-2 pt-4 text-[10px] font-bold uppercase tracking-[0.24em] text-muted-foreground">
+              Navigasi
+            </p>
+            <nav className="flex flex-col gap-1 px-3" aria-label="Menu admin">
+              {NAV_ITEMS.map((item) => (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => setTab(item.key)}
+                  aria-current={tab === item.key ? "page" : undefined}
+                  className={`flex items-center gap-3 rounded-xl px-3 py-3 text-left text-[11px] font-bold uppercase tracking-[0.18em] transition-colors ${
+                    tab === item.key
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-white/[0.04] hover:text-foreground"
+                  }`}
+                >
+                  <item.icon className="h-4 w-4 shrink-0" aria-hidden />
+                  {item.label}
+                </button>
+              ))}
+            </nav>
+
+            <div className="mt-auto flex flex-col gap-1 px-3 pb-6 pt-5">
+              <p className="px-1 pb-1 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+                {tab === "products"
+                  ? `${filteredProducts.length} dari ${products.length} produk`
+                  : `${categories.length} kategori`}
+              </p>
+              <Link
+                href="/"
+                target="_blank"
+                className="flex items-center gap-3 rounded-xl px-3 py-3 text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:bg-white/[0.04] hover:text-foreground"
+              >
+                <ExternalLink className="h-4 w-4 shrink-0" aria-hidden />
+                Buka Situs
+              </Link>
+              <button
+                type="button"
+                onClick={requestLogout}
+                className="flex items-center gap-3 rounded-xl px-3 py-3 text-left text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:bg-red-400/10 hover:text-red-400"
+              >
+                <LogOut className="h-4 w-4 shrink-0" aria-hidden />
+                Logout
+              </button>
+            </div>
+          </aside>
+        </div>
+      </div>
+
       {/* Ringkasan */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
         {[
@@ -715,12 +924,7 @@ export function AdminDashboard({
           <p className="px-3 pb-2 pt-1 text-[10px] font-bold uppercase tracking-[0.24em] text-muted-foreground">
             Navigasi
           </p>
-          {(
-            [
-              { key: "products" as const, label: "Produk", icon: Boxes },
-              { key: "categories" as const, label: "Kategori", icon: Tags },
-            ]
-          ).map((item) => (
+          {NAV_ITEMS.map((item) => (
             <button
               key={item.key}
               type="button"
@@ -763,43 +967,6 @@ export function AdminDashboard({
         </aside>
 
         <div className="min-w-0 flex-1">
-          {/* Bar atas mobile */}
-          <div className="mb-4 flex items-center justify-between gap-2 lg:hidden">
-            <div className="flex items-center gap-2.5">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/15 text-primary">
-                <LayoutGrid className="h-4 w-4" aria-hidden />
-              </span>
-              <div>
-                <p className="font-headline text-xs font-extrabold tracking-[0.24em] text-foreground">
-                  PAYOTA <span className="text-primary">Admin</span>
-                </p>
-                <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
-                  Manajemen Konten
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Link
-                href="/"
-                target="_blank"
-                aria-label="Buka situs"
-                title="Buka situs"
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 text-muted-foreground transition-colors hover:text-foreground"
-              >
-                <ExternalLink className="h-4 w-4" aria-hidden />
-              </Link>
-              <button
-                type="button"
-                onClick={requestLogout}
-                aria-label="Logout"
-                title="Logout"
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-white/10 text-muted-foreground transition-colors hover:border-red-400/40 hover:text-red-400"
-              >
-                <LogOut className="h-4 w-4" aria-hidden />
-              </button>
-            </div>
-          </div>
-
           {/* Segmen mobile */}
           <div className="card-surface mb-5 flex items-center gap-1 p-1.5 lg:hidden">
             {(
@@ -1365,6 +1532,87 @@ export function AdminDashboard({
                   </button>
                 </div>
 
+                {/* Pencarian spesifikasi umum */}
+                <div className="mb-3 overflow-hidden rounded-xl border border-white/10 bg-white/[0.02]">
+                  <div className="flex items-center gap-2 p-2">
+                    <Search className="ml-1 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+                    <input
+                      type="text"
+                      className="h-9 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground/60"
+                      placeholder="Cari & tambah spesifikasi (mis. baterai, coil, material)..."
+                      value={specSearch}
+                      onChange={(e) => setSpecSearch(e.target.value)}
+                      aria-label="Cari spesifikasi umum"
+                    />
+                    {specSearch && (
+                      <button
+                        type="button"
+                        onClick={() => setSpecSearch("")}
+                        aria-label="Bersihkan pencarian"
+                        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-white/[0.06] hover:text-foreground"
+                      >
+                        <X className="h-4 w-4" aria-hidden />
+                      </button>
+                    )}
+                  </div>
+                  <div className="max-h-56 space-y-3 overflow-y-auto border-t border-white/[0.06] p-2">
+                    {specSearch ? (
+                      specMatches.length === 0 ? (
+                        <p className="px-2 py-3 text-xs text-muted-foreground">
+                          Tidak ditemukan spesifikasi. Gunakan &quot;Tambah Baris&quot; untuk
+                          menulis manual.
+                        </p>
+                      ) : (
+                        specMatches.map((s) => (
+                          <button
+                            key={s.id}
+                            type="button"
+                            onClick={() => addSpecFromMaster(s)}
+                            className="flex w-full items-center justify-between gap-2 rounded-lg px-2.5 py-2 text-left text-sm transition-colors hover:bg-white/[0.05]"
+                          >
+                            <span className="min-w-0">
+                              <span className="block truncate font-semibold text-foreground">
+                                {s.label}
+                              </span>
+                              <span className="block truncate text-xs text-muted-foreground">
+                                {s.value}
+                              </span>
+                            </span>
+                            <Plus
+                              className="h-4 w-4 shrink-0 text-muted-foreground"
+                              aria-hidden
+                            />
+                          </button>
+                        ))
+                      )
+                    ) : specOptions.length > 0 ? (
+                      specGrouped.map(([group, rows]) => (
+                        <div key={group}>
+                          <p className="px-2 pb-1 pt-1 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+                            {group}
+                          </p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {rows.map((s) => (
+                              <button
+                                key={s.id}
+                                type="button"
+                                onClick={() => addSpecFromMaster(s)}
+                                className="rounded-full border border-white/10 px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
+                              >
+                                {s.label}: {s.value}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="px-2 py-3 text-xs text-muted-foreground">
+                        Memuat daftar spesifikasi umum...
+                      </p>
+                    )}
+                  </div>
+                </div>
+
                 <div className="flex flex-col gap-2">
                   {form.specs.length === 0 && (
                     <p className="rounded-lg border border-dashed border-white/10 px-4 py-4 text-xs text-muted-foreground">
@@ -1538,15 +1786,16 @@ function ToggleCheck({
   label: string;
 }) {
   return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      onClick={() => onChange(!checked)}
-      className="group inline-flex items-center gap-3"
-    >
+    <label className="inline-flex cursor-pointer select-none items-center gap-3">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        className="peer sr-only"
+      />
       <span
-        className={`relative h-6 w-11 rounded-full transition-colors ${
+        aria-hidden
+        className={`pointer-events-none relative h-6 w-11 shrink-0 rounded-full transition-colors ${
           checked ? "bg-primary" : "bg-white/[0.08]"
         }`}
       >
@@ -1557,7 +1806,7 @@ function ToggleCheck({
         />
       </span>
       <span className="text-sm font-semibold text-foreground">{label}</span>
-    </button>
+    </label>
   );
 }
 
