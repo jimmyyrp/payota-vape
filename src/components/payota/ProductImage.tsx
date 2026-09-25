@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { ImageOff } from "lucide-react";
 import type { Product } from "@/data/products";
 
 /**
@@ -164,9 +163,10 @@ export function PayotaArt({ product }: { product: Product }) {
 }
 
 /**
- * Gambar produk yang selalu aman: kalau produk punya `image`, muat sebagai
- * <img>; gagal → placeholder elegan "IMAGE UNAVAILABLE". Tanpa gambar (dummy)
- * → render <PayotaArt />.
+ * Gambar produk yang selalu aman dengan rantai fallback:
+ * 1. Foto produk (jika ada) → gagal muat → turun ke default-product.webp.
+ * 2. default-product.webp (juga dipakai saat produk tanpa foto) → gagal muat → PayotaArt (SVG).
+ * Jadi tidak ada kondisi "broken image" yang tampil ke pengunjung.
  */
 export function ProductImage({
   product,
@@ -177,47 +177,44 @@ export function ProductImage({
   image?: string;
   className?: string;
 }) {
-  const [failed, setFailed] = useState(false);
+  // null = belum ada kegagalan; "remote" = foto produk gagal; "default" = default gagal
+  const [failed, setFailed] = useState<null | "remote" | "default">(null);
   const imageSrc = image ?? product.image;
 
-  if (!imageSrc) {
+  // Tahap 3: foto & default sama-sama gagal → render SVG generatif.
+  if (failed === "default") {
     return (
       <div className={`relative overflow-hidden ${className ?? ""}`}>
-        {failed ? (
-          <PayotaArt product={product} />
-        ) : (
-          <Image
-            src="/default-product.webp"
-            alt={`${product.name} visual`}
-            fill
-            sizes="(min-width: 1280px) 25vw, (min-width: 768px) 33vw, 92vw"
-            className="object-cover"
-            onError={() => setFailed(true)}
-          />
-        )}
+        <PayotaArt product={product} />
       </div>
     );
   }
 
-  if (failed) {
+  // Tahap 1: foto produk ada dan belum gagal → muat sebagai <img> remote.
+  if (imageSrc && failed !== "remote") {
     return (
-      <div className={`flex flex-col items-center justify-center gap-2 bg-[#0D0D0D] ${className ?? ""}`}>
-        <ImageOff className="h-6 w-6 text-muted-foreground" aria-hidden />
-        <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-muted-foreground">
-          Gambar tidak tersedia
-        </span>
-      </div>
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={imageSrc}
+        alt={`${product.name} visual`}
+        loading="lazy"
+        onError={() => setFailed("remote")}
+        className={`object-contain ${className ?? ""}`}
+      />
     );
   }
 
+  // Tahap 2: tanpa foto, atau foto gagal → default-product.webp via next/image.
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={imageSrc}
-      alt={`${product.name} visual`}
-      loading="lazy"
-      onError={() => setFailed(true)}
-      className={`object-contain ${className ?? ""}`}
-    />
+    <div className={`relative overflow-hidden ${className ?? ""}`}>
+      <Image
+        src="/default-product.webp"
+        alt={`${product.name} visual`}
+        fill
+        sizes="(min-width: 1280px) 25vw, (min-width: 768px) 33vw, 92vw"
+        className="object-cover"
+        onError={() => setFailed("default")}
+      />
+    </div>
   );
 }

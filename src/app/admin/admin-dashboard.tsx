@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as Dialog from "@radix-ui/react-dialog";
@@ -202,6 +202,8 @@ export function AdminDashboard({
   const [asideOpen, setAsideOpen] = useState(false);
   const [specOptions, setSpecOptions] = useState<SpecOption[]>([]);
   const [specSearch, setSpecSearch] = useState("");
+  const [specStatus, setSpecStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [specError, setSpecError] = useState<string>("");
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -263,20 +265,32 @@ export function AdminDashboard({
     setAsideOpen(false);
   }, [tab]);
 
+  const loadSpecs = useCallback(async (signal?: AbortSignal) => {
+    setSpecStatus("loading");
+    setSpecError("");
+    try {
+      const res = await fetch("/api/admin/specs", { cache: "no-store", signal });
+      const data = await safeJson<{ ok?: boolean; specs?: SpecOption[]; message?: string }>(res);
+      if (!res.ok || !data?.ok) {
+        throw new Error(data?.message ?? `Server menolak permintaan (HTTP ${res.status}).`);
+      }
+      setSpecOptions(data.specs ?? []);
+      setSpecStatus("ready");
+    } catch (error) {
+      if ((error as Error).name === "AbortError") return; // dialog ditutup — abaikan
+      setSpecOptions([]);
+      setSpecError((error as Error).message || "Gagal memuat daftar spesifikasi.");
+      setSpecStatus("error");
+    }
+  }, []);
+
   useEffect(() => {
     if (!formOpen) return;
-    let cancelled = false;
     setSpecSearch("");
-    fetch("/api/admin/specs", { cache: "no-store" })
-      .then((res) => safeJson<{ ok?: boolean; specs?: SpecOption[] }>(res))
-      .then((data) => {
-        if (!cancelled && data?.ok) setSpecOptions(data.specs ?? []);
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, [formOpen]);
+    const controller = new AbortController();
+    loadSpecs(controller.signal);
+    return () => controller.abort();
+  }, [formOpen, loadSpecs]);
 
   const openCreate = () => {
     setEditingId(null);
@@ -679,7 +693,7 @@ export function AdminDashboard({
       {/* Toast */}
       {toast && (
         <div
-          className={`sticky top-4 z-50 flex items-center gap-2 rounded-xl border px-4 py-3 text-sm ${
+          className={`sticky top-[72px] z-50 flex items-center gap-2 rounded-xl border px-4 py-3 text-sm lg:top-4 ${
             toast.kind === "ok"
               ? "border-white/15 bg-white/[0.06] text-foreground"
               : "border-red-400/25 bg-red-400/10 text-red-300"
@@ -704,47 +718,56 @@ export function AdminDashboard({
 
       {/* Bar aplikasi + aside drawer (mobile & tablet) */}
       <div className="lg:hidden">
-        <div className="sticky top-4 z-40 mb-5 flex items-center justify-between gap-2 rounded-[1.25rem] border border-white/10 bg-[#0D0D0D]/90 px-3 py-2.5 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.8)] backdrop-blur-xl">
-          <div className="flex items-center gap-2.5">
-            <button
-              type="button"
-              onClick={() => setAsideOpen(true)}
-              aria-label="Buka menu admin"
-              title="Buka menu admin"
-              className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 text-muted-foreground transition-colors hover:border-white/30 hover:text-foreground"
-            >
-              <Menu className="h-5 w-5" aria-hidden />
-            </button>
-            <div>
-              <p className="font-headline text-sm font-extrabold tracking-[0.24em] text-foreground">
-                PAYOTA <span className="text-primary">Admin</span>
-              </p>
-              <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
-                Manajemen Konten
-              </p>
+        {/**
+          * Bar diberi position: fixed agar tetap terlihat saat halaman di-scroll.
+          * (Sticky tidak bekerja di sini: induknya hanya selingkupi bar ini saja,
+          * sehingga rentang sticky-nya nol dan bar langsung tergulir keluar.)
+          */}
+        <div className="fixed inset-x-0 top-0 z-[45] border-b border-white/10 bg-[#0B0B0D]/95 backdrop-blur-xl">
+          <div className="flex items-center justify-between gap-2 px-3 py-2.5">
+            <div className="flex items-center gap-2.5">
+              <button
+                type="button"
+                onClick={() => setAsideOpen(true)}
+                aria-label="Buka menu admin"
+                title="Buka menu admin"
+                className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 text-muted-foreground transition-colors hover:border-white/30 hover:text-foreground"
+              >
+                <Menu className="h-5 w-5" aria-hidden />
+              </button>
+              <div>
+                <p className="font-headline text-sm font-extrabold tracking-[0.24em] text-foreground">
+                  PAYOTA <span className="text-primary">Admin</span>
+                </p>
+                <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
+                  Manajemen Konten
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Link
+                href="/"
+                target="_blank"
+                aria-label="Buka situs"
+                title="Buka situs"
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-muted-foreground transition-colors hover:border-white/30 hover:text-foreground"
+              >
+                <ExternalLink className="h-[18px] w-[18px]" aria-hidden />
+              </Link>
+              <button
+                type="button"
+                onClick={requestLogout}
+                aria-label="Logout"
+                title="Logout"
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-muted-foreground transition-colors hover:border-red-400/40 hover:text-red-400"
+              >
+                <LogOut className="h-[18px] w-[18px]" aria-hidden />
+              </button>
             </div>
           </div>
-          <div className="flex items-center gap-1.5">
-            <Link
-              href="/"
-              target="_blank"
-              aria-label="Buka situs"
-              title="Buka situs"
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-muted-foreground transition-colors hover:border-white/30 hover:text-foreground"
-            >
-              <ExternalLink className="h-[18px] w-[18px]" aria-hidden />
-            </Link>
-            <button
-              type="button"
-              onClick={requestLogout}
-              aria-label="Logout"
-              title="Logout"
-              className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-muted-foreground transition-colors hover:border-red-400/40 hover:text-red-400"
-            >
-              <LogOut className="h-[18px] w-[18px]" aria-hidden />
-            </button>
-          </div>
         </div>
+        {/* Spacer setinggi bar agar konten tidak tertutup bar fixed */}
+        <div className="h-[60px]" aria-hidden />
 
         {/* Aside drawer mobile */}
         <div
@@ -1674,7 +1697,40 @@ export function AdminDashboard({
                           </button>
                         ))
                       )
-                    ) : specOptions.length > 0 ? (
+                    ) : specStatus === "loading" ? (
+                      <p className="px-2 py-3 text-xs text-muted-foreground">
+                        Memuat daftar spesifikasi umum...
+                      </p>
+                    ) : specStatus === "error" ? (
+                      <div className="flex flex-col gap-2 px-2 py-3">
+                        <p className="text-xs leading-relaxed text-red-300">
+                          Gagal memuat: {specError}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => loadSpecs()}
+                          className="flex w-fit items-center gap-1.5 rounded-full border border-white/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground transition-colors hover:border-white/30 hover:text-foreground"
+                        >
+                          <RefreshCw className="h-3.5 w-3.5" aria-hidden />
+                          Coba Lagi
+                        </button>
+                      </div>
+                    ) : specOptions.length === 0 ? (
+                      <div className="px-2 py-3 text-xs leading-relaxed text-muted-foreground">
+                        <p>Daftar spesifikasi umum masih kosong.</p>
+                        <p className="mt-1">
+                          Jalankan migration{" "}
+                          <code className="rounded bg-white/[0.06] px-1.5 py-0.5 text-foreground">
+                            migrations/009_vape_specs_master.sql
+                          </code>{" "}
+                          ke database (mis. via{" "}
+                          <code className="rounded bg-white/[0.06] px-1.5 py-0.5 text-foreground">
+                            node scripts/migrate.mjs
+                          </code>
+                          ), lalu klik Coba Lagi.
+                        </p>
+                      </div>
+                    ) : (
                       specGrouped.map(([group, rows]) => (
                         <div key={group}>
                           <p className="px-2 pb-1 pt-1 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
@@ -1694,10 +1750,6 @@ export function AdminDashboard({
                           </div>
                         </div>
                       ))
-                    ) : (
-                      <p className="px-2 py-3 text-xs text-muted-foreground">
-                        Memuat daftar spesifikasi umum...
-                      </p>
                     )}
                   </div>
                 </div>
