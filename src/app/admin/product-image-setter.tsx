@@ -9,7 +9,8 @@ const MAX_FILE_MB = 15;
 
 /**
  * Pengatur foto produk: unggah, crop persegi (drag/zoom/rotasi) via
- * canvas, pratinjau, dan hapus. Hasil disimpan sebagai data URL ringan.
+ * canvas, pratinjau, dan hapus. Hasil crop WebP diunggah ke penyimpanan
+ * cloud (bucket Supabase Storage) saat produk disimpan.
  */
 export function ProductImageSetter({
   value,
@@ -163,8 +164,8 @@ export function ProductImageSetter({
 
               <p className="text-xs leading-relaxed text-muted-foreground">
                 Seret gambar untuk memindah bingkai, gunakan slider untuk
-                zoom & rotasi. Hasil crop selalu persegi (1:1) dan tersimpan
-                sebagai foto produk.
+                zoom &amp; rotasi. Hasil crop selalu persegi (1:1), dikonversi
+                ke WebP, dan diunggah ke penyimpanan cloud saat disimpan.
               </p>
             </div>
           </div>

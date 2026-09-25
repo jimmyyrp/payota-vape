@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import type { ProductSpec } from "@/data/products";
 import { ProductImageSetter } from "./product-image-setter";
+import { uploadProductImage, deleteProductImage } from "./upload-product-image";
 
 interface DbProduct {
   id: number;
@@ -37,8 +38,6 @@ interface DbProduct {
   description: string;
   specs: ProductSpec[] | string;
   art: string;
-  glow: string;
-  glow_soft: string;
   badge: string | null;
   featured: boolean;
   price: string;
@@ -65,8 +64,6 @@ interface ProductInput {
   description: string;
   specs: ProductSpec[];
   art: string;
-  glow: string;
-  glowSoft: string;
   badge: string;
   featured: boolean;
   price: string;
@@ -99,8 +96,6 @@ const EMPTY_FORM: ProductInput = {
   description: "",
   specs: [],
   art: "device",
-  glow: "#E4E4E7",
-  glowSoft: "rgba(228,228,231,0.14)",
   badge: "",
   featured: false,
   price: "",
@@ -128,8 +123,6 @@ function rowToInput(row: DbProduct): ProductInput {
     description: row.description,
     specs: parseSpecs(row.specs),
     art: row.art,
-    glow: row.glow,
-    glowSoft: row.glow_soft,
     badge: row.badge ?? "",
     featured: row.featured,
     price: row.price,
@@ -145,14 +138,6 @@ function slugify(value: string): string {
     .trim()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
-}
-
-/** Glow lembut (rgba) diturunkan otomatis dari hex glow — tanpa input manual. */
-function softGlowFromHex(hex: string): string {
-  const match = /^#?([a-f\d]{6})$/i.exec((hex ?? "").trim());
-  if (!match) return "rgba(228,228,231,0.14)";
-  const num = parseInt(match[1], 16);
-  return `rgba(${(num >> 16) & 255},${(num >> 8) & 255},${num & 255},0.14)`;
 }
 
 const inputClass =
@@ -240,10 +225,25 @@ export function AdminDashboard({
   const saveProduct = async () => {
     setSaving(true);
     try {
+      let image = form.image.trim();
+      const prevImage = editingId
+        ? products.find((p) => p.id === editingId)?.image ?? null
+        : null;
+      if (image.startsWith("data:")) {
+        const upload = await uploadProductImage({
+          dataUrl: image,
+          slug: form.slug || slugify(form.name),
+          prev: prevImage,
+        });
+        if (!upload.ok) throw new Error(upload.message ?? "Gagal mengunggah foto.");
+        image = upload.url ?? "";
+      } else if (!image && prevImage && prevImage.startsWith("http")) {
+        await deleteProductImage(prevImage);
+      }
       const body = {
         ...form,
+        image,
         slug: form.slug === slugify(form.name) ? "" : form.slug,
-        glowSoft: softGlowFromHex(form.glow),
       };
       const res = await fetch(editingId ? `/api/admin/products/${editingId}` : "/api/admin/products", {
         method: editingId ? "PATCH" : "POST",
@@ -857,7 +857,7 @@ export function AdminDashboard({
                   <div className="flex items-start gap-3">
                     <span
                       className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-white/10"
-                      style={{ background: `radial-gradient(circle, ${p.glow}22, transparent)` }}
+                      style={{ background: "radial-gradient(circle, rgba(228,228,231,0.16), transparent 70%)" }}
                       aria-hidden
                     >
                       <span className="text-[10px] font-black text-white/60">
@@ -955,7 +955,7 @@ export function AdminDashboard({
                       <div className="flex items-center gap-3">
                         <span
                           className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/10"
-                          style={{ background: `radial-gradient(circle, ${p.glow}22, transparent)` }}
+                          style={{ background: "radial-gradient(circle, rgba(228,228,231,0.16), transparent 70%)" }}
                           aria-hidden
                         >
                           <span className="text-[9px] font-black text-white/60">
@@ -1207,20 +1207,6 @@ export function AdminDashboard({
                 />
               </Field>
 
-              <Field label="Slug (URL produk)">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">#</span>
-                  <input
-                    className={`${inputClass} opacity-90`}
-                    value={
-                      form.slug || slugify(form.name)
-                    }
-                    readOnly
-                    title="Slug dibuat otomatis dari nama"
-                  />
-                </div>
-              </Field>
-
               <Field label="Kategori *">
                 <div className="flex items-center gap-2">
                   <select
@@ -1314,23 +1300,6 @@ export function AdminDashboard({
                     </option>
                   ))}
                 </select>
-              </Field>
-
-              <Field label="Warna Glow (hex)">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="color"
-                    value={form.glow}
-                    onChange={(e) => setForm((f) => ({ ...f, glow: e.target.value }))}
-                    className="h-10 w-12 shrink-0 cursor-pointer rounded-lg border border-white/10 bg-transparent"
-                    aria-label="Pilih warna glow"
-                  />
-                  <input
-                    className={inputClass}
-                    value={form.glow}
-                    onChange={(e) => setForm((f) => ({ ...f, glow: e.target.value }))}
-                  />
-                </div>
               </Field>
 
               <div className="md:col-span-2">
@@ -1497,11 +1466,6 @@ export function AdminDashboard({
                     }))
                   }
                 />
-              </Field>
-              <Field label="Slug (URL)">
-                <p className="rounded-lg border border-white/10 bg-white/[0.02] px-3 py-2.5 text-sm text-muted-foreground">
-                  /{categoryForm.slug || slugify(categoryForm.name) || "kategori"}
-                </p>
               </Field>
               <Field label="Tagline">
                 <input

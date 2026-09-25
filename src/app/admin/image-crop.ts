@@ -1,9 +1,9 @@
 import type { Area } from "react-easy-crop";
 
 /**
- * Crop foto produk via canvas (klien). Menghasilkan data URL JPEG/WebP
- * yang disimpan di kolom `image` produk — muatannya jauh lebih kecil
- * daripada file asli sehingga aman disimpan di kolom TEXT di database.
+ * Crop foto produk via canvas (klien). Menghasilkan data URL WebP persegi
+ * yang lalu diunggah admin ke Supabase Storage (bucket) — bukan disimpan
+ * langsung sebagai data URL di database.
  */
 
 function getRadianAngle(degreeValue: number) {
@@ -18,11 +18,26 @@ function rotatedBoxSize(width: number, height: number, rotation: number) {
   };
 }
 
-function loadImage(src: string): Promise<HTMLImageElement> {
+/** Muat gambar; dicoba dulu crossOrigin=anonymous (untuk URL storage Supabase). */
+function loadImage(src: string, useAnonymous = true): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const image = new Image();
-    image.onload = () => resolve(image);
-    image.onerror = () => reject(new Error("Gagal memuat gambar untuk dicrop."));
+    if (useAnonymous) image.crossOrigin = "anonymous";
+    const onError = () => {
+      image.onload = null;
+      image.onerror = null;
+      if (useAnonymous) {
+        loadImage(src, false).then(resolve, reject);
+      } else {
+        reject(new Error("Gagal memuat gambar untuk dicrop."));
+      }
+    };
+    image.onload = () => {
+      image.onload = null;
+      image.onerror = null;
+      resolve(image);
+    };
+    image.onerror = onError;
     image.src = src;
   });
 }

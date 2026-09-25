@@ -65,6 +65,7 @@ node scripts/seed-payota.mjs
 
 - `POST /api/admin/login` · `POST /api/admin/logout`
 - `GET|POST /api/admin/products` · `GET|PATCH|DELETE /api/admin/products/[id]`
+- `POST|DELETE /api/admin/products/image` (upload & hapus foto produk di Supabase Storage)
 - `GET|POST /api/admin/categories` · `PATCH|DELETE /api/admin/categories/[id]`
 
 ## Ganti Data Produk
@@ -72,8 +73,9 @@ node scripts/seed-payota.mjs
 Edit `src/data/products.ts` lalu jalankan `node scripts/seed-payota.mjs`, atau kelola langsung
 dari CMS admin. Gambar produk digambar otomatis sebagai render SVG premium (tidak ada broken
 image). Bila ingin foto asli, unggah via form produk di dashboard admin (fitur upload, crop,
-zoom, dan rotasi persegi 1:1 — hasil disimpan di kolom `image`, lalu dipakai otomatis oleh
-`<ProductImage />` di seluruh situs; kosongkan untuk kembali ke visual SVG).
+zoom, dan rotasi persegi 1:1 — hasil dikonversi ke **WebP** dan diunggah ke bucket
+`products` di **Supabase Storage**; URL publik-nya disimpan di kolom `image`, lalu dipakai
+otomatis oleh `<ProductImage />` di seluruh situs; kosongkan untuk kembali ke visual SVG).
 
 ## Verifikasi usia
 
