@@ -38,8 +38,6 @@ function normalize(input: ProductInput): ProductInput {
           .map((s) => ({ label: String(s.label ?? "").trim(), value: String(s.value ?? "").trim() }))
       : [],
     art: String(input.art ?? "device").trim() || "device",
-    glow: String(input.glow ?? "#E4E4E7").trim() || "#E4E4E7",
-    glowSoft: String(input.glowSoft ?? "").trim(),
     badge: String(input.badge ?? "").trim(),
     featured: !!input.featured,
     price: String(input.price ?? "").trim(),

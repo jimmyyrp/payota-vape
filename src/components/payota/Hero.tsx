@@ -110,7 +110,7 @@ export function Hero({ featured }: { featured: Product | null }) {
             <div className="relative">
               <div
                 className="absolute inset-0 -z-10 rounded-full blur-[120px]"
-                style={{ background: featured.glowSoft }}
+                style={{ background: "radial-gradient(circle, rgba(228,228,231,0.16), transparent 70%)" }}
                 aria-hidden
               />
               <div className="relative overflow-hidden rounded-[2rem] border border-white/[0.07] shadow-[0_40px_120px_-40px_rgba(0,0,0,0.9)]">

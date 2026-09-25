@@ -39,8 +39,8 @@ export function Footer() {
             PAYOTA
           </span>
           <p className="mt-3 max-w-xs text-sm leading-relaxed text-muted-foreground">
-            Gaya Hidup Premium. Koleksi objek keseharian yang dikurasi, dirancang dengan kesederhanaan
-            dan difinishing tanpa kompromi.
+            Kurasi Selektif & Premium. Koleksi objek keseharian yang dikurasi, dirancang dengan
+            kesederhanaan dan difinishing tanpa kompromi.
           </p>
         </div>
 

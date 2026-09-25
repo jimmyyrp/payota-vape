@@ -15,7 +15,7 @@ export function FeaturedProduct({ product }: { product: Product | null }) {
         <Reveal className="relative order-2 lg:order-1">
           <div
             className="absolute inset-0 -z-10 rounded-full blur-[130px]"
-            style={{ background: product.glowSoft }}
+            style={{ background: "radial-gradient(circle, rgba(228,228,231,0.16), transparent 70%)" }}
             aria-hidden
           />
           <div className="overflow-hidden rounded-[2rem] border border-white/[0.07] bg-[#0A0A0C]">

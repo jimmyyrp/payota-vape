@@ -31,8 +31,6 @@ export interface Product {
   badge?: "Unggulan" | "Baru" | "Terbatas";
   featured?: boolean;
   art: ArtVariant;
-  glow: string;
-  glowSoft: string;
   price: string;
   image?: string;
 }
@@ -57,8 +55,6 @@ export const products: Product[] = [
     badge: "Unggulan",
     featured: true,
     art: "device",
-    glow: "#E4E4E7",
-    glowSoft: "rgba(228,228,231,0.14)",
     price: "Rp 1.450.000",
   },
   {
@@ -76,8 +72,6 @@ export const products: Product[] = [
       { label: "Koleksi", value: "Seri Core" },
     ],
     art: "pod",
-    glow: "#D4D4D8",
-    glowSoft: "rgba(212,212,216,0.12)",
     price: "Rp 980.000",
   },
   {
@@ -96,8 +90,6 @@ export const products: Product[] = [
     ],
     badge: "Baru",
     art: "slim",
-    glow: "#E4E4E7",
-    glowSoft: "rgba(228,228,231,0.12)",
     price: "Rp 1.680.000",
   },
   {
@@ -115,8 +107,6 @@ export const products: Product[] = [
       { label: "Koleksi", value: "Seri Air" },
     ],
     art: "air",
-    glow: "#A1A1AA",
-    glowSoft: "rgba(161,161,170,0.12)",
     price: "Rp 1.290.000",
   },
   {
@@ -134,8 +124,6 @@ export const products: Product[] = [
       { label: "Koleksi", value: "Seri Pro" },
     ],
     art: "slim",
-    glow: "#E4E4E7",
-    glowSoft: "rgba(228,228,231,0.16)",
     price: "Rp 2.240.000",
   },
   {
@@ -153,8 +141,6 @@ export const products: Product[] = [
       { label: "Koleksi", value: "Seri One" },
     ],
     art: "one",
-    glow: "#D4D4D8",
-    glowSoft: "rgba(212,212,216,0.12)",
     price: "Rp 1.520.000",
   },
   {
@@ -172,8 +158,6 @@ export const products: Product[] = [
       { label: "Koleksi", value: "Seri Desk" },
     ],
     art: "dock",
-    glow: "#A1A1AA",
-    glowSoft: "rgba(161,161,170,0.12)",
     price: "Rp 760.000",
   },
   {
@@ -191,8 +175,6 @@ export const products: Product[] = [
       { label: "Koleksi", value: "Seri Guard" },
     ],
     art: "shield",
-    glow: "#E4E4E7",
-    glowSoft: "rgba(228,228,231,0.10)",
     price: "Rp 340.000",
   },
   {
@@ -210,8 +192,6 @@ export const products: Product[] = [
       { label: "Koleksi", value: "Seri Travel" },
     ],
     art: "strap",
-    glow: "#D4D4D8",
-    glowSoft: "rgba(212,212,216,0.10)",
     price: "Rp 520.000",
   },
   {
@@ -230,8 +210,6 @@ export const products: Product[] = [
     ],
     badge: "Terbatas",
     art: "studio",
-    glow: "#E4E4E7",
-    glowSoft: "rgba(228,228,231,0.18)",
     price: "Sesuai permintaan",
   },
 ];

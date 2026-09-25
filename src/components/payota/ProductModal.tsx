@@ -30,7 +30,7 @@ export function ProductModal({
               <div className="relative border-b border-white/[0.07] bg-[#0A0A0C] md:border-b-0 md:border-r">
                 <div
                   className="absolute inset-0 blur-[90px]"
-                  style={{ background: product.glowSoft }}
+                  style={{ background: "radial-gradient(circle, rgba(228,228,231,0.16), transparent 70%)" }}
                   aria-hidden
                 />
                 <div className="relative aspect-square">

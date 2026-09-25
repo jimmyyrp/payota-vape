@@ -10,8 +10,6 @@ export interface ProductInput {
   description: string;
   specs: ProductSpec[];
   art: string;
-  glow: string;
-  glowSoft: string;
   badge: string;
   featured: boolean;
   price: string;
@@ -26,14 +24,6 @@ export interface CategoryInput {
   isActive: boolean;
 }
 
-/** Glow lembut (rgba) diturunkan dari hex; kosong = nilai default. */
-function softGlow(input: string): string {
-  const match = /^#?([a-f\d]{6})$/i.exec((input ?? "").trim());
-  if (!match) return "rgba(228,228,231,0.14)";
-  const num = parseInt(match[1], 16);
-  return `rgba(${(num >> 16) & 255},${(num >> 8) & 255},${num & 255},0.14)`;
-}
-
 function productToDb(input: ProductInput) {
   return {
     slug: input.slug.trim().toLowerCase().replace(/[^a-z0-9-]+/g, "-"),
@@ -44,10 +34,6 @@ function productToDb(input: ProductInput) {
     description: input.description,
     specs: input.specs && input.specs.length ? JSON.stringify(input.specs) : "[]",
     art: input.art,
-    glow: input.glow,
-    glow_soft: input.glowSoft && input.glowSoft.includes("rgba")
-      ? input.glowSoft
-      : softGlow(input.glow),
     badge: input.badge || null,
     featured: !!input.featured,
     price: input.price,

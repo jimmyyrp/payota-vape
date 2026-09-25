@@ -105,7 +105,7 @@ export function LoginForm({ autoFocus = false }: { autoFocus?: boolean }) {
 
       <p className="mt-6 flex items-center justify-center gap-1.5 text-center text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
         <ShieldCheck className="h-3.5 w-3.5" aria-hidden />
-        Sesi berakhir otomatis setelah 12 jam
+        Sesi tersimpan aman hingga 30 hari
       </p>
     </div>
   );

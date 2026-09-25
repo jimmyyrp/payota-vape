@@ -9,6 +9,8 @@ import { useCatalog } from "./catalog-context";
 import { useCart } from "./cart-context";
 import { CartDrawer } from "./CartDrawer";
 import { LoginForm } from "@/app/admin/login/login-form";
+import { SITE_NAME, SITE_TAGLINE } from "@/lib/site";
+import { useAdminSession } from "@/lib/use-admin-session";
 
 const NAV_LINKS = [
   { label: "Koleksi", href: "/#collections" },
@@ -150,6 +152,7 @@ function SearchOverlay() {
 export function Navbar() {
   const { searchOpen, openSearch } = useCatalog();
   const { count, openCart } = useCart();
+  const { loading: sessionLoading, loggedIn } = useAdminSession();
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -226,15 +229,31 @@ export function Navbar() {
                   </span>
                 )}
               </button>
-              <button
-                type="button"
-                onClick={() => setLoginOpen(true)}
-                aria-label="Masuk admin"
-                title="Masuk admin"
-                className="flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-white/[0.04] hover:text-foreground"
-              >
-                <User className="h-[18px] w-[18px]" aria-hidden />
-              </button>
+              {loggedIn ? (
+                <Link
+                  href="/admin"
+                  aria-label="Buka dashboard admin"
+                  title="Dashboard admin"
+                  className="relative flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-white/[0.04] hover:text-foreground"
+                >
+                  <User className="h-[18px] w-[18px]" aria-hidden />
+                  <span
+                    className="absolute right-1 top-1 h-2 w-2 rounded-full bg-emerald-400"
+                    aria-hidden
+                  />
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => !sessionLoading && setLoginOpen(true)}
+                  aria-label="Masuk admin"
+                  title={sessionLoading ? "Memuat..." : "Masuk admin"}
+                  disabled={sessionLoading}
+                  className="relative flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-white/[0.04] hover:text-foreground disabled:opacity-50"
+                >
+                  <User className="h-[18px] w-[18px]" aria-hidden />
+                </button>
+              )}
               <button
                 type="button"
                 onClick={openSearch}
@@ -306,7 +325,7 @@ export function Navbar() {
               </Link>
             ))}
             <p className="pt-6 text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground">
-              PAYOTA — Gaya Hidup Premium
+              {SITE_NAME} — {SITE_TAGLINE}
             </p>
           </nav>
         </div>

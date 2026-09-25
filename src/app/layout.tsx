@@ -42,7 +42,7 @@ export const metadata: Metadata = {
   publisher: SITE_NAME,
   applicationName: SITE_NAME,
   category: "shopping",
-  classification: "Toko Online — Kelengkapan Lifestyle Premium",
+  classification: "Toko Online — Perangkat, Aksesori & Esensial Vape",
   formatDetection: {
     email: false,
     address: false,

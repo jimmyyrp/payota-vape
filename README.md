@@ -1,6 +1,6 @@
-# PAYOTA — Gaya Hidup Premium
+# PAYOTA — Kurasi Selektif & Premium
 
-Website katalog produk lifestyle premium — dark, minimal, modern, futuristik. Katalog statis
+Website katalog produk premium — dark, minimal, modern, futuristik. Katalog statis
 didukung database Supabase + CMS admin (login admin, kelola produk & kategori). Seluruh konten
 antarmuka dalam Bahasa Indonesia.
 

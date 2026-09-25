@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { ShieldAlert, Lock } from "lucide-react";
+import { SITE_TAGLINE } from "@/lib/site";
 
 const VERIFY_KEY = "payota_age_verified";
 const SESSION_KEY = "payota_age_session";
@@ -100,10 +101,10 @@ export function AgeGate() {
         <span className="chip border border-primary/30 bg-primary/10 text-primary">21+</span>
         <h2 className="mt-5 text-2xl">PAYOTA</h2>
         <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground">
-          Gaya Hidup Premium
+          {SITE_TAGLINE}
         </p>
         <p className="mt-5 text-sm leading-relaxed text-muted-foreground">
-          Situs ini menyajikan produk lifestyle premium yang hanya diperuntukkan bagi pengunjung
+          Situs ini menyajikan produk premium yang hanya diperuntukkan bagi pengunjung
           berusia <strong className="text-foreground">21 tahun ke atas</strong>. Dengan melanjutkan,
           Anda menyatakan sudah berusia minimal 21 tahun.
         </p>

@@ -21,8 +21,6 @@ interface ProductRow {
   description: string;
   specs: ProductSpec[] | string;
   art: string;
-  glow: string;
-  glow_soft: string;
   badge: string | null;
   featured: boolean;
   price: string;
@@ -53,8 +51,6 @@ function toProduct(row: ProductRow): Product {
     badge: (row.badge as Product["badge"]) ?? undefined,
     featured: row.featured,
     art: (row.art as ArtVariant) || DEFAULT_ART,
-    glow: row.glow,
-    glowSoft: row.glow_soft,
     price: row.price,
     image: row.image ?? undefined,
   };

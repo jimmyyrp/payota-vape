@@ -10,7 +10,8 @@ import type { Product } from "@/data/products";
  * (tanpa file gambar eksternal → tidak ada broken image).
  */
 export function PayotaArt({ product }: { product: Product }) {
-  const { art, glow, glowSoft, index, name } = product;
+  const { art, index, name } = product;
+  const ACCENT = "#E4E4E7";
 
   let body: React.ReactNode;
 
@@ -127,8 +128,8 @@ export function PayotaArt({ product }: { product: Product }) {
     >
       <defs>
         <radialGradient id="pb" cx="50%" cy="42%" r="65%">
-          <stop offset="0%" stopColor={glow} stopOpacity="0.16" />
-          <stop offset="55%" stopColor={glow} stopOpacity="0.03" />
+          <stop offset="0%" stopColor={ACCENT} stopOpacity="0.16" />
+          <stop offset="55%" stopColor={ACCENT} stopOpacity="0.03" />
           <stop offset="100%" stopColor="transparent" />
         </radialGradient>
         <linearGradient id="body" x1="0" y1="0" x2="1" y2="1">
@@ -138,7 +139,7 @@ export function PayotaArt({ product }: { product: Product }) {
         </linearGradient>
         <linearGradient id="edge" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stopColor="#4C4C55" />
-          <stop offset="50%" stopColor={glow} stopOpacity="0.55" />
+          <stop offset="50%" stopColor={ACCENT} stopOpacity="0.55" />
           <stop offset="100%" stopColor="#3A3A42" />
         </linearGradient>
       </defs>
@@ -151,7 +152,7 @@ export function PayotaArt({ product }: { product: Product }) {
       {body}
 
       <g opacity="0.7">
-        <text x="28" y="44" fontSize="11" fontWeight="700" letterSpacing="3" fill={glow}>
+        <text x="28" y="44" fontSize="11" fontWeight="700" letterSpacing="3" fill={ACCENT}>
           PAYOTA
         </text>
         <text x="28" y="366" fontSize="10" letterSpacing="2" fill="#6B6B74">

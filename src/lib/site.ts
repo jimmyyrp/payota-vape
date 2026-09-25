@@ -1,8 +1,8 @@
 export const SITE_URL = "https://payotavape.web.id";
 export const SITE_NAME = "PAYOTA";
-export const SITE_TAGLINE = "Gaya Hidup Premium";
+export const SITE_TAGLINE = "Kurasi Selektif & Premium";
 export const SITE_DESCRIPTION =
-  "PAYOTA — koleksi objek lifestyle premium yang dikurasi: perangkat, aksesori, esensial, dan edisi terbatas. Desain minimal, material halus, pengalaman keseharian yang bersih. Solok, Sumatera Barat.";
+  "PAYOTA — koleksi objek premium yang dikurasi: perangkat, aksesori, esensial, dan edisi terbatas. Desain minimal, material halus, pengalaman keseharian yang bersih. Solok, Sumatera Barat.";
 
 export const OG_IMAGE = `${SITE_URL}/hero.webp`;
 export const OG_IMAGE_WIDTH = 1672;
@@ -18,8 +18,8 @@ export const SITE_KEYWORDS = [
   "perangkat vape premium",
   "aksesori vape",
   "liquid & esensial vape",
-  "gaya hidup premium",
+  "kurasi selektif",
   "objek desain",
-  "koleksi lifestyle",
+  "koleksi premium",
   "vape sumatera barat",
 ];

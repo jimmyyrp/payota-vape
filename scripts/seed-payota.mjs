@@ -36,8 +36,6 @@ const rows = products.map((p) => ({
   description: p.description,
   specs: JSON.stringify(p.specs),
   art: p.art,
-  glow: p.glow,
-  glow_soft: p.glowSoft,
   badge: p.badge ?? null,
   featured: p.featured ?? false,
   price: p.price,

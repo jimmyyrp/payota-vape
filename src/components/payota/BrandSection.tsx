@@ -29,7 +29,7 @@ export function BrandSection() {
         <div className="flex flex-col justify-end">
           <Reveal delay={120}>
             <p className="text-[15px] leading-relaxed text-muted-foreground">
-              PAYOTA adalah konsep gaya hidup modern yang berfokus pada desain yang matang, detail
+              PAYOTA adalah konsep kurasi modern yang berfokus pada desain yang matang, detail
               yang halus, dan pengalaman keseharian yang bersih. Setiap objek dalam lini ini
               disederhanakan menjadi hal yang benar-benar penting — lalu difinishing hingga mencapai
               standar yang pantas kami banggakan.
